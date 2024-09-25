@@ -1,0 +1,19 @@
+POST http://localhost:4000/register
+Content-Type: application/json
+
+{
+    "name": "rohan",
+    "password": "gutS@1112",
+    "confirmPassword": "gutS@1112",
+    "email": "rohan.mahor92@gmail.com"
+}
+
+###
+
+POST http://localhost:4000/login
+Content-Type: application/json
+
+{
+    "email": "rohan.mahor92@gmail.com",
+    "password":"gutS@1112"
+}
