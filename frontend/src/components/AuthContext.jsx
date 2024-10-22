@@ -2,7 +2,6 @@ import React, { useCallback, useEffect } from "react";
 import { createContext } from "react";
 import axioInst from "../utils";
 const AuthContext = createContext();
-const ws = new WebSocket("ws://localhost:4000/ws");
 
 
 function AuthContextProvider({ children }) {
@@ -12,8 +11,6 @@ function AuthContextProvider({ children }) {
     const [registerError, setRegisterError] = React.useState(null);
     const [loginError, setLoginError] = React.useState(null);
     const [friends, setFriends] = React.useState([]);
-    const [selectedUser, setSelectedUser] = React.useState(null);
-    const [message, setMessage] = React.useState("");
 
 
     const updateRegisterInfo = useCallback((info) => {
@@ -24,9 +21,15 @@ function AuthContextProvider({ children }) {
         setLoginInfo(info);
     }, []);
 
-    const updateSelectedUser = useCallback((info) => {
-        setSelectedUser(info);
-    }, []);
+    // const updateFriends = useCallback((info) => {
+        // setFriends(...friends,info);
+    //     setFriends(friends)
+    // }, [friends]);
+
+
+    // const updateSelectedUser = useCallback((info) => {
+    //     setSelectedUser(info);
+    // }, []);
 
     const registerUser = useCallback((event) => {
         setRegisterError(null);
@@ -39,15 +42,15 @@ function AuthContextProvider({ children }) {
     const loginUser = useCallback((event) => {
         setLoginError(null);
         axioInst.post("/login", loginInfo).then((res) => {
-            console.log(res.data); setUser(res.data); 
+            setUser(res.data); 
             localStorage.setItem("user", JSON.stringify(res.data));
             getfri();
         }).catch((err) => { setLoginError({ message: err.response.data.message }) })
     }, [loginInfo])
 
-    useEffect(() => {
+    // useEffect(() => {
 
-    }, []);
+    // }, []);
 
     const logoutUser = useCallback(() => {
         localStorage.removeItem("user");
@@ -57,16 +60,22 @@ function AuthContextProvider({ children }) {
 
     }, []);
 
-    const updateMessage = useCallback((info) => {
-        setMessage(info);
+    // const updateMessage = useCallback((info) => {
+    //     setMessage(info);
        
-    }, [])
+    // }, [])
 
     function getfri()
     {
-        axioInst.get("/getFriends").then((res) => { 
-            setFriends(res.data.friends); 
-        }).catch((err) => { })
+        const currentUser =JSON.parse(localStorage.getItem("user"));
+        // console.log(currentUser)
+        if(currentUser)
+        {
+            axioInst.post("/getFriends",{currentUser}).then((res) => { 
+                setFriends(res.data.friends); 
+            }).catch((err) => { })
+        }
+        
     }
 
 
@@ -77,13 +86,13 @@ function AuthContextProvider({ children }) {
             getfri();
         }
             
-    }, [])
+    }, [user])
 
 
-    const sendMessage = useCallback((info) => {
+    // const sendMessage = useCallback((info) => {
         
-        ws.send(info);
-    }, [])
+    //     ws.send(info);
+    // }, [])
     // useEffect(()=>{
     //     axioInst.get("/cookie").then((res)=>{}).catch((err)=>{})
     // },[])
@@ -99,12 +108,10 @@ function AuthContextProvider({ children }) {
         loginError,
         loginUser,
         logoutUser,
-        updateSelectedUser,
         friends,
-        selectedUser,
-        sendMessage,
-        updateMessage,
-        message
+        setFriends,
+        
+     
     }}>
         {children}
     </AuthContext.Provider>
