@@ -199,6 +199,7 @@ router.get("/ws", (req, res) => {
                         from: parsedMessage.from,
                         message: senderMessage,
                         send_at: parsedMessage.send_at,
+                        date: parsedMessage.date,
                     }),
                 );
             }
@@ -245,7 +246,7 @@ router.put("/updatechat", async (req, res) => {
     // console.log("updatechat", user, friend, message);
     // if(message && friend)
     // {
-    //     const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at) VALUES($1, $2, $3, now())`,[user.id, friend.id, message]);
+    //     const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date) VALUES($1, $2, $3, now(),now()::date)`,[user.id, friend.id, message]);
     // }
     res.json("");
 });
@@ -254,7 +255,7 @@ router.post("/chat", async (req, res) => {
     const { user, info } = req.body;
     console.log(user.id, info.id);
     const response = await db.query(
-        `SELECT "from", "to" , message, TO_CHAR(send_at,'HH24:MI') AS send_at FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by send_at`,[user.id, info.id] 
+        `SELECT "from", "to" , message, TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `,[user.id, info.id] 
     );
     console.log("chat rows", response.rows);
     if (response.rows.length > 0) {

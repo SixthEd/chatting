@@ -129,7 +129,7 @@ button:hover {
 
 .friendblock {
     width: 10vw;
-    height: 93.5vh;
+    height: 89vh;
     background: rgba(83, 81, 81, 0.2);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(5px);
@@ -142,21 +142,23 @@ button:hover {
     height: 89vh;
     background: rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
+    border-radius: 0%;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .frequest{
-    width: 25vw;
-    height: 3.9vh;
-    background: rgba(46, 39, 39, 0.2);
+    width: 10vw;
+    height: 5vh;
+    background: rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
+    border-radius: 0%;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
 }
 
 .chatblock {
@@ -169,19 +171,22 @@ button:hover {
 }
 
 .frequest input{
-    width: 7vw;
-    height: 3.9vh;
+    width: 7.4vw;
+    height: 3vh;
 }
 
 .frequest button{
-    width:3vw;
-    height: 3.9vh;
+    width:2vw;
+    height: 3vh;
+    background-color: #04aa6d00;
 }
 
 .frequest form{
+    width: 10vw;
     display: flex;
     gap: 0;
     flex-direction: row;
+    justify-content: space-around;
 }
 
 .frequest button:hover{
@@ -200,13 +205,15 @@ button:hover {
 }
 
 .sendmessage input{
-    width:85vw;
-    height: 3.9vh;
+    width:75vw;
+    height: 3vh;
 }
 
 .sendmessage button{
-    width:5vw;
-    height: 3.9vh;
+    width:3vw;
+    height: 3.2vh;
+    border-radius: 0%;
+    background-color: #04aa6d00;
 }
 
 .sendmessage button:hover{
@@ -217,6 +224,9 @@ button:hover {
     display: flex;
     gap: 0;
     flex-direction: row;
+    align-items: center;
+    flex-basis: 80vw;
+    justify-content: start;
 }
 
 .friends button:hover{
@@ -226,17 +236,17 @@ button:hover {
 .friends button{
     width: 10vw;
     height: 4.5vh;
-    border: 1px solid black;
+    border-bottom: 0.2px solid black;
     text-align: justify;
     border-radius: 0;
-    background-color: rgb(132, 145, 144);
+    background-color: rgb(132 145 144 / 0%);
     display: flex;
     align-items: center;
 }
 
 .chats{
     width: 90vw;
-    height: 87vh;
+    height: 83vh;
     background: rgba(46, 39, 39, 0.2);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     border-radius: 5px;
@@ -244,6 +254,7 @@ button:hover {
     -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.3);
     overflow-y: scroll;
+    border-radius: 0%;
 }
 
 .send{
@@ -351,4 +362,214 @@ button:hover {
 
 .friend-lmd{
     font-size: small;
+}
+
+.date{
+    width: 7vw;
+    margin: auto;
+    text-align: center;
+    color:white;
+    font-family: 'Courier New', Courier, monospace; 
+
+}
+
+.send .chat-message{
+    background-color: #009ae5b8;
+    color:white;
+}
+
+.received .chat-message{
+    background-color: rgb(255 255 255 / 32%);
+    color: white;
+}
+
+.message-date{
+    height: 15vh;
+}
+
+.time-text{
+    color: white;
+}
+
+.connecting-user{
+    display: flex;
+    height: 6vh;
+    align-items: center;
+    color: white;
+    font-size: large;
+    
+}
+
+.connecting-user img{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.connecting-uimg{
+    text-align: center;
+    flex-basis: 4vw;
+}
+
+.sendmessage{
+    display: flex;
+    align-items: center;
+    height: 5vh;
+    background: rgba(46, 39, 39, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    justify-content: space-around;
+    text-align: center;
+}
+
+.emj-file{
+    display: flex;
+    flex-basis: 1vw;
+    justify-content: space-around;
+}
+
+.emj-file button{
+    flex-basis: 1vw;
+}
+
+.file-form{
+    width: 90vw;
+    height: 88vh;
+    background: rgba(46, 39, 39, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.file-form img{
+    width: 50vw;
+    height: 60vh;
+}
+
+.file-form form{
+    width: 50%;
+    margin: auto;
+    align-items: center;
+}
+
+.file-close{
+    background-color: #04aa6d00;
+    width: 1px;
+    height: 1px;
+}
+
+.file-form button
+{
+    background-color:#04aa6d00 ;
+}
+
+.file-caption{
+    display: flex;
+}
+
+
+.file-form button:hover{
+    transform: unset;
+}
+
+.chat-box img{
+    height: 25vh;
+    width: 28vw;
+    border-radius: 2%;
+}
+
+.chat-box video{
+    height: 25vh;
+    width: 28vw;
+    border-radius: 2%;
+}
+
+audio{
+    width: 500px;
+}
+
+.drop-down{
+    height: 14vh;
+    z-index: 0;
+    position: absolute;
+    top: -13.9vh;
+    left:5vw;
+    animation: downOut 100ms ease-in-out forwards ;
+    width: 9vw;
+    background: rgba(46, 39, 39, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    
+}
+
+.drop-block{
+    display: flex;
+    flex-direction: column;
+    background:#04AA6D;
+    z-index: +1;
+    position: absolute;
+    gap:2px;
+    width: 9vw;
+    
+    
+}
+
+/* @keyframes downOut {
+    0% {
+       transform: transLateY(0px)
+   }
+   50%{
+    transform: transLateY(-20px)
+   }
+   100%{
+    transform: transLateY(-30px)
+   }
+   
+} */
+
+.drop-block{
+    background-color: #04aa6d00;;
+}
+
+.drop-block button{
+    display: flex;
+    justify-content: start;
+    align-items:center;
+    width: 9vw;
+    border-radius: 5%;
+}
+
+.drop-block button div{
+    flex-basis: 50px;
+}
+
+.drop-block button:hover{
+ background-color: gray;
+}
+
+.doc-name{
+    font-weight: 500;
+    font-size: 3rem;
+    color:white;
+}
+
+.audioChatBox{
+    display: flex;
+    justify-content: space-between;
+}
+
+.docChatBox{
+    display: flex;
+    justify-content: space-between;
 }
