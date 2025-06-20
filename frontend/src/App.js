@@ -10,6 +10,7 @@ import { AuthContext } from './components/AuthContext';
 
 function App() {
   const {user} = useContext(AuthContext)
+
   return <div>
     <BrowserRouter>
     <Nav />

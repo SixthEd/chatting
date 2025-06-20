@@ -17,3 +17,8 @@ Content-Type: application/json
     "email": "rohan.mahor92@gmail.com",
     "password":"gutS@1112"
 }
+
+###
+GET http://localhost:4000/cookie
+Content-Type: application/json
+Set-Cookie: jwt=j%3A%7B%22accessToken%22%3A%22eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJvaGFuLm1haG9yOTJAZ21haWwuY29tIiwibmFtZSI6IlJvaGFuIiwiZXhwIjoxNzQ3Mjg4NDkwLCJpYXQiOjE3NDcyODg0ODl9.vRDaIwESgUwsuYFLkbXlVTYsXKL_zk_BZlZ6Xu_Zv_w%22%2C%22refreshToken%22%3A%22eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InJvaGFuLm1haG9yOTJAZ21haWwuY29tIiwibmFtZSI6IlJvaGFuIiwiZXhwIjoxNzQ3ODkzMjg5LCJpYXQiOjE3NDcyODg0ODl9.hCy65GSkBqTxRjsxRDfORBxsU1dRHKM9kMfrTP5uKcw%22%7D; Path=/; Expires=Thu, 15 May 2025 06:54:49 GMT; HttpOnly

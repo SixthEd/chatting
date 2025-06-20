@@ -33,7 +33,7 @@ function AuthContextProvider({ children }) {
 
     const registerUser = useCallback((event) => {
         setRegisterError(null);
-        axioInst.post("/register", registerInfo).then((res) => { setUser(res.data); localStorage.JSON.stringify(res.data) }).catch((err) => {
+        axioInst.post("/register", registerInfo).then((res) => { setUser(res.data); localStorage.setItem("user", JSON.stringify(res.data)) }).catch((err) => {
             setRegisterError({ message: err.response.data.message })
         })
     }, [registerInfo]);

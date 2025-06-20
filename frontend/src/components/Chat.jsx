@@ -21,9 +21,11 @@ import AddAPhotoRoundedIcon from '@mui/icons-material/AddAPhotoRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded';
+import CallRoundedIcon from '@mui/icons-material/CallRounded';
 import Video from "./Video";
 import Audio from "./Audio";
 import Document from "./Document";
+import Call from "./Call";
 
 const MessageType = {
     UserConnected: 1,
@@ -44,7 +46,7 @@ function Chat() {
     const [showDocumentBlock, setShowDocumentBlock] = useState(0);
     const [block, setBlock] = useState(0);
     const [showMenu, setShowMenu] = useState(0);
-
+    const [call, setCall] = useState(0);
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
     const ws = useRef("");
@@ -242,6 +244,7 @@ function Chat() {
             setShowAudioBlock(0);
             setShowVideoBlock(0);
             setShowDocumentBlock(0);
+            setCall(0);
             setSelectedUser(info);
             console.log({ user, info });
             if (showMessage[info.id]) {
@@ -425,8 +428,9 @@ function Chat() {
                                 <div className="connecting-uimg">
                                     <img src="profile.webp" alt="" />
                                 </div>
-                                <div>
-                                    {selectedUser && `${selectedUser.name}`}
+                                <div className="connecting-uleft">
+                                    <div>{selectedUser && `${selectedUser.name}`}</div>
+                                    <div onClick={()=>setCall(1)}><CallRoundedIcon /></div>
                                 </div>
                             </div>
                         )}
@@ -449,7 +453,7 @@ function Chat() {
                             <Document 
                                 updateDocument={updateShowDocumentBlock}
                                 sendMess={sendMessage}    
-                            />: (
+                            />:(call ===1)?<Call />: (
                             <div className="chats">
                                 {selectedUser &&
                                     showMessage[selectedUser.id] &&

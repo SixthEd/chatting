@@ -21,12 +21,11 @@ const MessageType = {
 };
 
 //register route
-router.post("/register", async (req, res) => {});
+// router.post("/register", async (req, res) => {});
 
 //register route
 router.post("/register", async (req, res) => {
     const { name, password, email, confirmPassword } = req.body;
-
     //checking user is already registered or not
     const response = await db.query("SELECT * FROM users WHERE email = $1", [
         email,
@@ -153,7 +152,6 @@ router.get("/ws", (req, res) => {
 
     web.handleUpgrade(req, req.socket, new Buffer(""), (socket) => {
         userSockets[id] = socket;
-
         // send a list of all connected users to this user
         socket.send(
             JSON.stringify({

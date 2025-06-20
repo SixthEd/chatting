@@ -573,3 +573,13 @@ audio{
     display: flex;
     justify-content: space-between;
 }
+
+.connecting-uleft{
+    display: flex;
+    justify-content:space-between;
+    width:80vw;
+}
+
+video{
+    width: 80vw;
+}
