@@ -11,6 +11,8 @@ const saltRounds = 10;
 const router = express.Router();
 
 const userSockets = {};
+const classRoomPasswords = {};
+// const roomSockets = {}
 
 const MessageType = {
     UserConnected: 1,
@@ -18,6 +20,15 @@ const MessageType = {
     ConnectedUserList: 3,
     Status: 4,
     ReceivedMessage: 5,
+};
+
+const roomMessageType = {
+    UserConnected: 1,
+    UserDisconnected: 2,
+    ConnectedUserList: 3,
+    Status: 4,
+    ReceivedMessage: 5,
+    password: 6
 };
 
 //register route
@@ -212,6 +223,113 @@ router.get("/ws", (req, res) => {
     });
 });
 
+
+router.get("/wsroom", (req, res) => {
+
+    // console.log(req.query.id)
+    const id = req.query.id
+    web.handleUpgrade(req, req.socket, new Buffer(""), (socket) => {
+        // send a list of all connected users to this 
+        // roomSockets[id] = socket;
+        socket.send(
+            JSON.stringify({
+                type: roomMessageType.ConnectedUserList,
+                connectedUsers: id
+            }),
+        );
+
+        web.clients.forEach((client) => {
+            if (client !== socket && client.readyState === socket.OPEN) {
+                client.send(
+                    JSON.stringify({
+                        type: roomMessageType.UserConnected,
+                        id
+                    }),
+                );
+            }
+        });
+
+        socket.on("close", () => {
+            web.clients.forEach((client) => {
+                if (client !== socket && client.readyState === socket.OPEN) {
+                    client.send(
+                        JSON.stringify({
+                            type: roomMessageType.UserDisconnected,
+                            id
+                        }),
+                    );
+                }
+            });
+            delete classRoomPasswords[req.query.password][id]
+
+            console.log("closing", classRoomPasswords[req.query.password])
+            if(Object.keys(classRoomPasswords[req.query.password]).length===0)
+            {
+                delete classRoomPasswords[req.query.password]
+                console.log("classLength",classRoomPasswords)
+            }
+        });
+
+        socket.on("message", (message) => {
+            const parsedMessage = JSON.parse(message.toString());
+            // const senderSocket = roomUserSockets[parsedMessage.to];
+            // const senderMessage = parsedMessage.message;
+
+            console.log(parsedMessage);
+            const id = parsedMessage.id
+
+            if (parsedMessage.type === roomMessageType.password) {
+                if (!classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                    classRoomPasswords[parsedMessage.password] = { [id]: socket }
+                }
+                else {
+                    classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
+                }
+                // console.log(classRoomPasswords)
+
+            }
+            else if (parsedMessage.type === roomMessageType.ReceivedMessage) {
+                if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                        if (client !== socket && client.readyState === socket.OPEN) {
+                            client.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, from: parsedMessage.fromName, message: parsedMessage.message }))
+                        }
+                    })
+                }
+            }
+            else if(parsedMessage.type === roomMessageType.UserDisconnected)
+            {
+
+                delete classRoomPasswords[parsedMessage.password].id
+                console.log(classRoomPasswords[parsedMessage.password])
+                
+            }
+            else if(parsedMessage.type === "Drawing")
+            {
+                if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing ===1) {
+                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                        if (client !== socket && client.readyState === socket.OPEN) {
+                            client.send(JSON.stringify({ type:parsedMessage.type, isDrawing: parsedMessage.isDrawing, color:parsedMessage.color, message: parsedMessage.message, lastPosition: parsedMessage.lastPosition, currentPosition: parsedMessage.currentPosition  }))
+                        }
+                    })
+                }
+                else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing ===2) {
+                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                        if (client !== socket && client.readyState === socket.OPEN) {
+                            client.send(JSON.stringify({ type:parsedMessage.type, isDrawing: parsedMessage.isDrawing, x: parsedMessage.x , y:parsedMessage.y   }))
+                        }
+                    })
+                }
+                // console.log(parsedMessage)
+            }
+
+
+
+
+        });
+    });
+});
+
 router.post("/getFriends", async (req, res) => {
     const { name, id, email } = req.body.currentUser;
     //    console.log(name)
@@ -253,13 +371,13 @@ router.post("/chat", async (req, res) => {
     const { user, info } = req.body;
     console.log(user.id, info.id);
     const response = await db.query(
-        `SELECT "from", "to" , message, TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `,[user.id, info.id] 
+        `SELECT "from", "to" , message, TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `, [user.id, info.id]
     );
     console.log("chat rows", response.rows);
     if (response.rows.length > 0) {
         return res.json(response.rows);
     }
-//    INSERT INTO userchat ("from", "to", chat, send_at) VALUES(5, 1, ARRAY['hello'],now());
+    //    INSERT INTO userchat ("from", "to", chat, send_at) VALUES(5, 1, ARRAY['hello'],now());
 
     return res.json([
         { from: user.id, to: info.id, message: "this is hardcooded" },

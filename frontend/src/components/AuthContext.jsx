@@ -11,7 +11,7 @@ function AuthContextProvider({ children }) {
     const [registerError, setRegisterError] = React.useState(null);
     const [loginError, setLoginError] = React.useState(null);
     const [friends, setFriends] = React.useState([]);
-
+    const [classRoomPassword, setClassRoomPassword] = React.useState(null)
 
     const updateRegisterInfo = useCallback((info) => {
         setRegisterInfo(info);
@@ -110,7 +110,8 @@ function AuthContextProvider({ children }) {
         logoutUser,
         friends,
         setFriends,
-        
+        classRoomPassword,
+        setClassRoomPassword
      
     }}>
         {children}
