@@ -659,19 +659,19 @@ video {
     height: 95%;
     width: 100%;
     overflow-y: auto;
-    overflow-x:hidden;
-    
+    overflow-x: hidden;
+
 }
 
 
-.room-chatBox-container  button{
-    background-color:rgba(128, 128, 128, 0.616);
-    width: 100% ;
+.room-chatBox-container button {
+    background-color: rgba(128, 128, 128, 0.616);
+    width: 100%;
     border-radius: 0;
 
 }
 
-.room-chatBox-container  button:hover{
+.room-chatBox-container button:hover {
     transform: unset;
 }
 
@@ -688,16 +688,16 @@ video {
 .room-chatBox-container .down-input-button {
     display: flex;
     gap: 10px;
-    height: 5%;
+    /* height: 5%; */
     align-items: center;
     justify-content: center;
     /* margin: 0 20px ; */
     /* padding: 0 20px; */
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* border: 1px solid rgba(255, 255, 255, 0.3); */
     width: 100%;
 }
 
-.room-chatBox-container .down-input-button button{
+.room-chatBox-container .down-input-button button {
     background-color: #04AA6D;
     border-radius: 5px;
 }
@@ -736,14 +736,70 @@ video {
     font-size: small;
 }
 
-canvas{
+canvas {
+    background-color: rgb(78, 78, 128);
+    padding: 0;
+    border: 1px solid rgba(66, 64, 64, 0.37);
+}
 
-  background-color: rgb(78, 78, 128);
-  
-  padding:0;
-  border:1px solid white;
-} 
-
-.container .tools{
+.container .tools {
     display: flex;
+}
+
+.canvas-board {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.colors-board {
+    background-color: rgba(255, 255, 255, 0.527);
+    padding: 20px;
+    margin: 5px;
+    display: flex;
+    gap: 2px;
+}
+
+.colors-board button {
+    border-radius: 0%;
+}
+
+.colors-board button:hover {
+    transform: unset;
+    cursor: pointer;
+}
+
+
+.board-block{
+    position: absolute;
+    z-index: -1;
+}
+
+.start-game{
+    position:absolute;
+    z-index: 1;
+    width: 80%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.start-game p{
+    font-size: xx-large;
+    color:#04AA6D;
+    font-weight: 500;
+    
+}
+
+.start-game button{
+    height: 4vh;
+    width: 5vw;
+    cursor: pointer;
+}
+
+.password-clock{
+    display: flex;
+    justify-content: space-around;
 }

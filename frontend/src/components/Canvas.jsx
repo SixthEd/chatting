@@ -11,7 +11,29 @@ export const Canvas = (props) => {
     const [isDrawing, setIsDrawing] = useState(0)
     const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 })
     const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 })
-    const [colors, setColors] = useState(["pink", "orange"]);
+    const paintingColors = [
+        "Red",
+        "Orange",
+        "Yellow",
+        "Green",
+        "Blue",
+        "Indigo",
+        "Violet",
+        "Black",
+        "White",
+        "Gray",
+        "Brown",
+        "Pink",
+        "Cyan",
+        "Gold",
+        "Purple",
+        "Lime",
+        "Firebrick",
+        "Steelblue",
+        "Wheat",
+        "Tan"
+    ];
+
     const [color, setColor] = useState()
     const [isPress, setIsPress] = useState(false)
 
@@ -82,7 +104,7 @@ export const Canvas = (props) => {
             const { x, y } = position(event);
             var ctx = canvas.getContext("2d");
             ctx.beginPath();
-            props.sendCanvas({ type: "Drawing", isDrawing, color,lastPosition, currentPosition, password: classRoomPassword })
+            props.sendCanvas({ type: "Drawing", isDrawing, color, lastPosition, currentPosition, password: classRoomPassword })
             ctx.moveTo(lastPosition.x, lastPosition.y);
             ctx.lineTo(currentPosition.x, currentPosition.y);
             ctx.lineWidth = 2;
@@ -104,10 +126,20 @@ export const Canvas = (props) => {
 
     return <div className="container">
         <div className="tools">
-            <div>{colors.map((c) => <button onClick={() => { setColor(c); setIsDrawing(1) }}>{c}</button>)}</div>
-            <div><button onClick={(e) => { setIsDrawing(2); }} >Clean</button></div>
-            <div><button onClick={(e) => { setIsDrawing(1); }}>Pencil</button></div>
+
+
         </div>
-        <canvas id="canvas-container" width="1482" height="858" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
+        <div className="canvas-board">
+            <div className="colors-board">
+                <div>
+                    <button onClick={(e) => { setIsDrawing(2); }} >Clean</button>
+                    <button onClick={(e) => { setIsDrawing(1); }}>Pencil</button>
+                </div>
+                {paintingColors.map((c) => <button style={{ backgroundColor: c }} onClick={() => { setColor(c); setIsDrawing(1) }}>{c}</button>)}
+            </div>
+
+            <canvas id="canvas-container" width="1200" height="775" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
+
+        </div>
     </div>
 }

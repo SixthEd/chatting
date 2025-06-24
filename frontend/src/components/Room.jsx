@@ -11,20 +11,26 @@ function Room(props) {
         ConnectedUserList: 3,
         Status: 4,
         ReceivedMessage: 5,
-        password: 6
+        password: 6,
+        roomNotFound: 7,
+        gameStart: 8,
+        clockTime: 9,
+        chooseCreator: 10,
+        choosePlayer: 11
     };
 
     const ws = useRef(null);
-    const { classRoomPassword , setClassRoomPassword} = useContext(AuthContext);
+    const { classRoomPassword, setClassRoomPassword, role, setRole } = useContext(AuthContext);
     // const user =localStorage.getItem("user")
     const [pixeData, setPixelData] = useState({});
     // const [currentPosition, setCurrentPosition] = useState({x:0, y:0});
+    const [start, setStart] = useState(0);
 
     const [message, setMessage] = useState("");
     const [messageList, setMessageList] = useState([]);
     const url = `ws://localhost:4000/wsroom`;
-
-
+    const [clock, setClock] = useState(30);
+    const myInterval = useRef(null);
 
     useEffect(() => {
         //     const windowUrl =window.location.href;
@@ -42,20 +48,42 @@ function Room(props) {
                 setMessageList((old) => [...old, { message: parsedMessage.message, from: parsedMessage.from, password: classRoomPassword }])
 
             }
-            else if(parsedMessage.type === "Drawing")
-            {
+            else if (parsedMessage.type === "Drawing") {
                 setPixelData(parsedMessage)
-                
+
+            }
+            else if (parsedMessage.type === roomMessageType.roomNotFound) {
+                const user = JSON.parse(localStorage.getItem("user"))
+                setClassRoomPassword(null)
+                ws.current.send(JSON.stringify({ type: roomMessageType.roomNotFound, message, id: user.id, fromName: user.name, password: classRoomPassword }));
+                ws.current.close()
+            }
+            else if (parsedMessage.type === roomMessageType.gameStart) {
+                setStart(1)
+            }
+            else if (parsedMessage.type === roomMessageType.clockTime) {
+                setClock(parsedMessage.clockTime)
+            }
+            else if (parsedMessage.type === roomMessageType.chooseCreator) {
+                setStart(0);
+                setClock(30);
+                setRole("creator")
+            }
+            else if (parsedMessage.type === roomMessageType.choosePlayer) {
+                setStart(0);
+                setClock(30);
+
+                setRole("player")
             }
         }
 
-        ws.current.onopen =()=>{
-            ws.current.send(JSON.stringify({type: roomMessageType.password, password: classRoomPassword ,id : user.id}))
+        ws.current.onopen = () => {
+            ws.current.send(JSON.stringify({ type: roomMessageType.password, password: classRoomPassword, id: user.id, role }))
         }
 
-        ws.current.onclose = ()=>{
+        ws.current.onclose = () => {
             console.log("working")
-            ws.current.send(JSON.stringify({type: roomMessageType.UserDisconnected , id: user.id, password: classRoomPassword}))
+            ws.current.send(JSON.stringify({ type: roomMessageType.UserDisconnected, id: user.id, password: classRoomPassword }))
         }
 
 
@@ -68,27 +96,45 @@ function Room(props) {
         setMessage("")
     }
 
-    const sendCanvasPositions =(position)=>{
+    const sendCanvasPositions = (position) => {
         const user = JSON.parse(localStorage.getItem("user"));
         ws.current.send(JSON.stringify(position))
     }
 
-    const closing =()=>{
+    const closing = () => {
         const user = JSON.parse(localStorage.getItem("user"))
         setClassRoomPassword(null)
         ws.current.send(JSON.stringify({ type: roomMessageType.UserDisconnected, message, id: user.id, fromName: user.name, password: classRoomPassword }));
         ws.current.close()
     }
 
+    const gameStart = () => {
+        setStart(1);
+        // setClock(5);
+
+
+        ws.current.send(JSON.stringify({ type: roomMessageType.gameStart, message: "start", password: classRoomPassword }))
+
+    }
+
+
     return <div className="classRoom">
         <div className="room-container">
-            <div className="room-board-container">Room Password : {classRoomPassword}
+            <div className="room-board-container">
                 <div>
-                    <Canvas sendCanvas={sendCanvasPositions} pixel={pixeData}/>
+                    <div className="password-clock">
+                        <p>Room Password : {classRoomPassword}</p><p> Clock : {clock}</p>
+                    </div>
+                    {start === 0 && <div className="start-game">
+                        {role === "player" ? <p>Wait game starts when host is ready ...</p> : <button onClick={() => { gameStart() }}>Start</button>}
+                    </div>}
+                    <div className={role === "player" ? "board-block" : ""}>
+                        <Canvas sendCanvas={sendCanvasPositions} pixel={pixeData} />
+                    </div>
                 </div>
             </div>
             <div className="room-chatBox-container">
-                    <button onClick={()=>{closing()}}>Leave the room</button>
+                <button onClick={() => { closing() }}>Leave the room</button>
 
                 <div className="top">
                     <div className="message">

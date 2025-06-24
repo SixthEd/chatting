@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { createContext } from "react";
 import axioInst from "../utils";
 const AuthContext = createContext();
@@ -11,7 +11,8 @@ function AuthContextProvider({ children }) {
     const [registerError, setRegisterError] = React.useState(null);
     const [loginError, setLoginError] = React.useState(null);
     const [friends, setFriends] = React.useState([]);
-    const [classRoomPassword, setClassRoomPassword] = React.useState(null)
+    const [classRoomPassword, setClassRoomPassword] = React.useState(null);
+    const [role, setRole] = useState(null);
 
     const updateRegisterInfo = useCallback((info) => {
         setRegisterInfo(info);
@@ -111,7 +112,9 @@ function AuthContextProvider({ children }) {
         friends,
         setFriends,
         classRoomPassword,
-        setClassRoomPassword
+        setClassRoomPassword,
+        role,
+        setRole
      
     }}>
         {children}

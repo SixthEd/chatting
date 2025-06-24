@@ -5,6 +5,7 @@ import bcrypt, { hash } from "bcrypt";
 import jwt from "jsonwebtoken";
 import { env } from "./index.js";
 import { web } from "./index.js";
+import e from "express";
 const saltRounds = 10;
 
 //initialize router
@@ -28,8 +29,17 @@ const roomMessageType = {
     ConnectedUserList: 3,
     Status: 4,
     ReceivedMessage: 5,
-    password: 6
+    password: 6,
+    roomNotFound: 7,
+    gameStart: 8,
+    clockTime: 9,
+    chooseCreator: 10,
+    choosePlayer: 11
 };
+
+const creators = {};
+
+const intervals = {};
 
 //register route
 // router.post("/register", async (req, res) => {});
@@ -260,14 +270,46 @@ router.get("/wsroom", (req, res) => {
                     );
                 }
             });
-            delete classRoomPasswords[req.query.password][id]
+            if (classRoomPasswords.hasOwnProperty(req.query.password)) {
+                delete classRoomPasswords[req.query.password][id]
 
-            console.log("closing", classRoomPasswords[req.query.password])
-            if(Object.keys(classRoomPasswords[req.query.password]).length===0)
-            {
-                delete classRoomPasswords[req.query.password]
-                console.log("classLength",classRoomPasswords)
             }
+            else {
+                return
+            }
+
+            console.log(creators[req.query.password])
+            if(creators[req.query.password]==id)
+            {
+                console.log("283 line is running")
+            }
+
+            console.log("closing")
+
+            if (Object.keys(classRoomPasswords[req.query.password]).length === 0) {
+                delete classRoomPasswords[req.query.password]
+                delete creators[req.query.id]
+                console.log("classLength", classRoomPasswords)
+            }
+            else if (creators[req.query.password] == id) {
+                clearInterval(intervals[req.query.password])
+
+                const passwordArray = Object.keys(classRoomPasswords[req.query.password])
+                const randomNumber = Math.floor(Math.random() * passwordArray.length);
+                const creator = passwordArray[randomNumber];
+                creators[req.query.password] = creator
+                console.log(passwordArray, randomNumber, creator)
+                Object.entries(classRoomPasswords[req.query.password]).forEach(([id, client]) => {
+                    if (id === creator) {
+                        client.send(JSON.stringify({ type: roomMessageType.chooseCreator }))
+                    }
+                    else {
+                        client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+                    }
+                })
+                console.log(creators[req.query.password])
+            }
+
         });
 
         socket.on("message", (message) => {
@@ -279,13 +321,19 @@ router.get("/wsroom", (req, res) => {
             const id = parsedMessage.id
 
             if (parsedMessage.type === roomMessageType.password) {
-                if (!classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+
+
+                if (!classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "creator") {
+                    creators[parsedMessage.password] = id
                     classRoomPasswords[parsedMessage.password] = { [id]: socket }
                 }
-                else {
+                else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "player") {
                     classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
                 }
-                // console.log(classRoomPasswords)
+                else {
+                    socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }))
+                }
+
 
             }
             else if (parsedMessage.type === roomMessageType.ReceivedMessage) {
@@ -297,31 +345,77 @@ router.get("/wsroom", (req, res) => {
                     })
                 }
             }
-            else if(parsedMessage.type === roomMessageType.UserDisconnected)
-            {
+            else if (parsedMessage.type === roomMessageType.UserDisconnected) {
 
                 delete classRoomPasswords[parsedMessage.password].id
                 console.log(classRoomPasswords[parsedMessage.password])
-                
+
             }
-            else if(parsedMessage.type === "Drawing")
-            {
-                if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing ===1) {
+            else if (parsedMessage.type === "Drawing") {
+                if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 1) {
                     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
                         if (client !== socket && client.readyState === socket.OPEN) {
-                            client.send(JSON.stringify({ type:parsedMessage.type, isDrawing: parsedMessage.isDrawing, color:parsedMessage.color, message: parsedMessage.message, lastPosition: parsedMessage.lastPosition, currentPosition: parsedMessage.currentPosition  }))
+                            client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, color: parsedMessage.color, message: parsedMessage.message, lastPosition: parsedMessage.lastPosition, currentPosition: parsedMessage.currentPosition }))
                         }
                     })
                 }
-                else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing ===2) {
+                else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 2) {
                     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
                         if (client !== socket && client.readyState === socket.OPEN) {
-                            client.send(JSON.stringify({ type:parsedMessage.type, isDrawing: parsedMessage.isDrawing, x: parsedMessage.x , y:parsedMessage.y   }))
+                            client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, x: parsedMessage.x, y: parsedMessage.y }))
                         }
                     })
                 }
                 // console.log(parsedMessage)
             }
+            else if (parsedMessage.type === roomMessageType.gameStart) {
+                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                    if (client !== socket && client.readyState === socket.OPEN) {
+                        client.send(JSON.stringify({ type: parsedMessage.type, message: parsedMessage.message }))
+                    }
+                })
+
+                let time = 30;
+                intervals[parsedMessage.password] = setInterval(() => {
+
+                    if (time === 0) {
+                        chooseCreator();
+                        clearInterval(intervals[parsedMessage.password])
+                    }
+
+                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                            if (client.readyState === socket.OPEN) {
+                                client.send(JSON.stringify({ type: roomMessageType.clockTime, clockTime: time }))
+                            }
+                        })
+                    }
+
+                    time--;
+
+
+                }, 1000)
+
+                const chooseCreator = () => {
+
+                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                        const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
+                        const randomNumber = Math.floor(Math.random() * passwordArray.length);
+                        const creator = passwordArray[randomNumber];
+                        creators[parsedMessage.password] = creator
+                        // console.log(passwordArray, randomNumber, creator)
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                            if (id === creator) {
+                                client.send(JSON.stringify({ type: roomMessageType.chooseCreator }))
+                            }
+                            else {
+                                client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+                            }
+                        })
+                    }
+                }
+            }
+
 
 
 

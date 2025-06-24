@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 function ClassRoom() {
 
     const [password, setPassword] = useState(null);
-    const { setClassRoomPassword, classRoomPassword } = useContext(AuthContext)
+    const { setClassRoomPassword, classRoomPassword, role, setRole} = useContext(AuthContext);
     const navigate = useNavigate();
 
     const goTo = useCallback((password) => {
@@ -20,6 +20,7 @@ function ClassRoom() {
     const passwordGenerate = useCallback(() => {
 
         var randomPassword = Math.random().toString(32).slice(2);
+        setRole("creator")
         goTo(randomPassword)
     }, [])
 
@@ -27,7 +28,7 @@ function ClassRoom() {
         <div className="classRoom-container">
             <div><input type="text" placeholder="Enter room password" onChange={(e) => { setPassword(e.target.value) }} /></div>
             <div className="classRoom-button">
-                <button onClick={() => { goTo(password) }}>Join</button>
+                <button onClick={() => { setRole("player"); goTo(password) }}>Join</button>
                 <button onClick={() => { passwordGenerate(); }}>Create</button>
             </div>
         </div>
