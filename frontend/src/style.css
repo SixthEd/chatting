@@ -720,8 +720,12 @@ video {
     width: fit-content;
     padding: 10px;
     margin: 10px;
+    border-radius: 5px
+}
+
+.room-chatBox-container .top  .message-text {
     background-color: rgb(57, 134, 223);
-    border-radius: 5px;
+
 }
 
 .room-chatBox-container .top .message .right-message {
@@ -771,13 +775,13 @@ canvas {
 }
 
 
-.board-block{
+.board-block {
     position: absolute;
     z-index: -1;
 }
 
-.start-game{
-    position:absolute;
+.start-game {
+    position: absolute;
     z-index: 1;
     width: 80%;
     height: 100%;
@@ -786,20 +790,29 @@ canvas {
     align-items: center;
 }
 
-.start-game p{
+.start-game p {
     font-size: xx-large;
-    color:#04AA6D;
+    color: #04AA6D;
     font-weight: 500;
-    
+
 }
 
-.start-game button{
+.start-game button {
     height: 4vh;
     width: 5vw;
     cursor: pointer;
 }
 
-.password-clock{
+.password-clock {
     display: flex;
     justify-content: space-around;
+}
+
+.room-chatBox-container .top .message .centre-message {
+    display: flex;
+    justify-content: center;
+}
+
+.centre-message .join {
+    background-color: grey;
 }

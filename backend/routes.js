@@ -234,10 +234,14 @@ router.get("/ws", (req, res) => {
 });
 
 
-router.get("/wsroom", (req, res) => {
+router.get("/wsroom", async (req, res) => {
 
     // console.log(req.query.id)
     const id = req.query.id
+
+    const response = await db.query(`Select * from users where id =$1`, [id]);
+    const name = response.rows[0].name;
+
     web.handleUpgrade(req, req.socket, new Buffer(""), (socket) => {
         // send a list of all connected users to this 
         // roomSockets[id] = socket;
@@ -248,29 +252,41 @@ router.get("/wsroom", (req, res) => {
             }),
         );
 
-        web.clients.forEach((client) => {
-            if (client !== socket && client.readyState === socket.OPEN) {
-                client.send(
-                    JSON.stringify({
-                        type: roomMessageType.UserConnected,
-                        id
-                    }),
-                );
-            }
-        });
+        // web.clients.forEach((client) => {
+        //     if (client !== socket && client.readyState === socket.OPEN) {
+        //         client.send(
+        //             JSON.stringify({
+        //                 type: roomMessageType.UserConnected,
+        //                 id
+        //             }),
+        //         );
+        //     }
+        // });
 
         socket.on("close", () => {
-            web.clients.forEach((client) => {
-                if (client !== socket && client.readyState === socket.OPEN) {
-                    client.send(
-                        JSON.stringify({
-                            type: roomMessageType.UserDisconnected,
-                            id
-                        }),
-                    );
-                }
-            });
+            // web.clients.forEach((client) => {
+            //     if (client !== socket && client.readyState === socket.OPEN) {
+            //         client.send(
+            //             JSON.stringify({
+            //                 type: roomMessageType.UserDisconnected,
+            //                 id,
+            //                 name
+            //             }),
+            //         );
+            //     }
+            // });
             if (classRoomPasswords.hasOwnProperty(req.query.password)) {
+                Object.entries(classRoomPasswords[req.query.password]).forEach(([id, client]) => {
+                    if (client !== socket && client.readyState === socket.OPEN) {
+                        client.send(
+                            JSON.stringify({
+                                type: roomMessageType.UserDisconnected,
+                                id,
+                                name
+                            }),
+                        );
+                    }
+                });
                 delete classRoomPasswords[req.query.password][id]
 
             }
@@ -279,8 +295,7 @@ router.get("/wsroom", (req, res) => {
             }
 
             console.log(creators[req.query.password])
-            if(creators[req.query.password]==id)
-            {
+            if (creators[req.query.password] == id) {
                 console.log("283 line is running")
             }
 
@@ -334,6 +349,11 @@ router.get("/wsroom", (req, res) => {
                     socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }))
                 }
 
+                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                    if (client !== socket && client.readyState === socket.OPEN) {
+                        client.send(JSON.stringify({ type: roomMessageType.UserConnected, name: parsedMessage.name }))
+                    }
+                })
 
             }
             else if (parsedMessage.type === roomMessageType.ReceivedMessage) {

@@ -75,10 +75,16 @@ function Room(props) {
 
                 setRole("player")
             }
+            else if (parsedMessage.type === roomMessageType.UserConnected) {
+                setMessageList((old) => [...old, { message: `${parsedMessage.name} joined the room`, from: "centre", password: classRoomPassword }])
+            }
+            else if (parsedMessage.type === roomMessageType.UserDisconnected) {
+                setMessageList((old) => [...old, { message: `${parsedMessage.name} left the room`, from: "centre", password: classRoomPassword }])
+            }
         }
 
         ws.current.onopen = () => {
-            ws.current.send(JSON.stringify({ type: roomMessageType.password, password: classRoomPassword, id: user.id, role }))
+            ws.current.send(JSON.stringify({ type: roomMessageType.password, password: classRoomPassword, id: user.id, role, name: user.name }))
         }
 
         ws.current.onclose = () => {
@@ -139,7 +145,7 @@ function Room(props) {
                 <div className="top">
                     <div className="message">
                         {messageList.map((m, i) => {
-                            return <div className={m.from === "me" && "right-message"} key={i}><div className="from">{m.from}</div><p> {m.message}</p></div>
+                            return <div className={m.from === "me" ? "right-message" : m.from === "centre" && "centre-message"} key={i}>{m.from !== "me" && m.from !== "centre" && <div className="from">{m.from}</div>}<p className={m.from === "centre" ? "join-text" : "message-text"}> {m.message}</p></div>
                         })}
                     </div>
                 </div>
