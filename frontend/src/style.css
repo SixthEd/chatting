@@ -805,7 +805,9 @@ canvas {
 
 .password-clock {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
+    width: 90%;
+    margin: 0 auto;
 }
 
 .room-chatBox-container .top .message .centre-message {
@@ -815,4 +817,19 @@ canvas {
 
 .centre-message .join {
     background-color: grey;
+}
+
+.randomWord{
+    display: flex;
+    gap:5px;
+}
+
+.randomWord p{
+    background-color: rgb(168, 148, 148);
+    border:2px solid #04AA6D;
+    /* padding: 5px; */
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    border-radius: 5px;
 }

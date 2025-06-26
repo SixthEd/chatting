@@ -6,6 +6,8 @@ import jwt from "jsonwebtoken";
 import { env } from "./index.js";
 import { web } from "./index.js";
 import e from "express";
+import { generate } from "random-words";
+
 const saltRounds = 10;
 
 //initialize router
@@ -34,12 +36,16 @@ const roomMessageType = {
     gameStart: 8,
     clockTime: 9,
     chooseCreator: 10,
-    choosePlayer: 11
+    choosePlayer: 11,
+    randomWord: 12,
+    winner: 13
 };
 
 const creators = {};
 
 const intervals = {};
+
+const randomWords = {};
 
 //register route
 // router.post("/register", async (req, res) => {});
@@ -181,7 +187,7 @@ router.get("/ws", (req, res) => {
             }),
         );
 
-        web.clients.forEach((client) => {
+        Object.entries(userSockets).forEach(([id,client]) => {
             if (client !== socket && client.readyState === socket.OPEN) {
                 client.send(
                     JSON.stringify({
@@ -193,7 +199,7 @@ router.get("/ws", (req, res) => {
         });
 
         socket.on("close", () => {
-            web.clients.forEach((client) => {
+            Object.entries(userSockets).forEach(([id,client]) => {
                 if (client !== socket && client.readyState === socket.OPEN) {
                     client.send(
                         JSON.stringify({
@@ -303,7 +309,8 @@ router.get("/wsroom", async (req, res) => {
 
             if (Object.keys(classRoomPasswords[req.query.password]).length === 0) {
                 delete classRoomPasswords[req.query.password]
-                delete creators[req.query.id]
+                delete creators[req.query.password]
+                delete randomWords[req.query.password]
                 console.log("classLength", classRoomPasswords)
             }
             else if (creators[req.query.password] == id) {
@@ -314,9 +321,11 @@ router.get("/wsroom", async (req, res) => {
                 const creator = passwordArray[randomNumber];
                 creators[req.query.password] = creator
                 console.log(passwordArray, randomNumber, creator)
+                const word = generate({ minLength: 3, maxLength: 8 });
+                randomWords[req.query.password] = word;
                 Object.entries(classRoomPasswords[req.query.password]).forEach(([id, client]) => {
                     if (id === creator) {
-                        client.send(JSON.stringify({ type: roomMessageType.chooseCreator }))
+                        client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
                     }
                     else {
                         client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
@@ -335,12 +344,23 @@ router.get("/wsroom", async (req, res) => {
             console.log(parsedMessage);
             const id = parsedMessage.id
 
+            // switch(parsedMessage.type)
+            // {
+            //     case roomMessageType.password :
+                    
+            //         break;
+                
+            // }
+
             if (parsedMessage.type === roomMessageType.password) {
 
 
                 if (!classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "creator") {
                     creators[parsedMessage.password] = id
                     classRoomPasswords[parsedMessage.password] = { [id]: socket }
+                    const word = generate({ minLength: 3, maxLength: 8 })
+                    randomWords[parsedMessage.password] = word;
+                    socket.send(JSON.stringify({ type: roomMessageType.randomWord, word }))
                 }
                 else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "player") {
                     classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
@@ -358,6 +378,35 @@ router.get("/wsroom", async (req, res) => {
             }
             else if (parsedMessage.type === roomMessageType.ReceivedMessage) {
                 if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+
+                    if (parsedMessage.message === randomWords[parsedMessage.password]) {
+                        clearInterval(intervals[parsedMessage.password])
+                        if (classRoomPasswords[parsedMessage.password].hasOwnProperty(parsedMessage.id)) {
+                            Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client])=>{
+                                client.send(JSON.stringify({ type: roomMessageType.winner, id: parsedMessage.id, name: parsedMessage.fromName }))
+
+                            })
+
+                            setTimeout(() => {
+                                const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
+                                const randomNumber = Math.floor(Math.random() * passwordArray.length);
+                                const creator = passwordArray[randomNumber];
+                                creators[parsedMessage.password] = creator
+                                // console.log(passwordArray, randomNumber, creator)
+                                const word = generate({ minLength: 3, maxLength: 8 });
+                                randomWords[parsedMessage.password] = word;
+                                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                                    if (id === creator) {
+                                        client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
+                                    }
+                                    else {
+                                        client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+                                    }
+                                })
+                            }, 15000)
+                        }
+
+                    }
                     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
                         if (client !== socket && client.readyState === socket.OPEN) {
                             client.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, from: parsedMessage.fromName, message: parsedMessage.message }))
@@ -424,9 +473,11 @@ router.get("/wsroom", async (req, res) => {
                         const creator = passwordArray[randomNumber];
                         creators[parsedMessage.password] = creator
                         // console.log(passwordArray, randomNumber, creator)
+                        const word = generate({ minLength: 3, maxLength: 8 });
+                        randomWords[parsedMessage.password] = word;
                         Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
                             if (id === creator) {
-                                client.send(JSON.stringify({ type: roomMessageType.chooseCreator }))
+                                client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
                             }
                             else {
                                 client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))

@@ -16,7 +16,10 @@ function Room(props) {
         gameStart: 8,
         clockTime: 9,
         chooseCreator: 10,
-        choosePlayer: 11
+        choosePlayer: 11,
+        randomWord: 12,
+        winner: 13
+
     };
 
     const ws = useRef(null);
@@ -31,6 +34,9 @@ function Room(props) {
     const url = `ws://localhost:4000/wsroom`;
     const [clock, setClock] = useState(30);
     const myInterval = useRef(null);
+    const [randomWord, setRandomWord] = useState(null);
+    const [winner , setWinner] = useState(null)
+    const [winnerMessage, setWinnerMessage] = useState(null) 
 
     useEffect(() => {
         //     const windowUrl =window.location.href;
@@ -68,18 +74,42 @@ function Room(props) {
                 setStart(0);
                 setClock(30);
                 setRole("creator")
+                setRandomWord(parsedMessage.word);
+                setWinner(0);
+                setWinnerMessage(null)
             }
             else if (parsedMessage.type === roomMessageType.choosePlayer) {
                 setStart(0);
                 setClock(30);
-
                 setRole("player")
+                setRandomWord(null);
+                setWinner(0);
+                setWinnerMessage(null);
             }
             else if (parsedMessage.type === roomMessageType.UserConnected) {
+                
                 setMessageList((old) => [...old, { message: `${parsedMessage.name} joined the room`, from: "centre", password: classRoomPassword }])
             }
             else if (parsedMessage.type === roomMessageType.UserDisconnected) {
                 setMessageList((old) => [...old, { message: `${parsedMessage.name} left the room`, from: "centre", password: classRoomPassword }])
+            }
+            else if (parsedMessage.type === roomMessageType.randomWord)
+            {
+                setRandomWord(parsedMessage.word)
+            }
+            else if (parsedMessage.type === roomMessageType.winner)
+            {
+                const user = JSON.parse(localStorage.getItem("user"))
+                if(user.id === parsedMessage.id)
+                {
+                    setWinnerMessage("You won the game")
+                }
+                else
+                {
+                    setWinnerMessage(`${parsedMessage.name} won the game`)
+                }
+                setWinner(1)
+                
             }
         }
 
@@ -129,11 +159,12 @@ function Room(props) {
             <div className="room-board-container">
                 <div>
                     <div className="password-clock">
-                        <p>Room Password : {classRoomPassword}</p><p> Clock : {clock}</p>
+                        <p>Room Password : {classRoomPassword}</p>{randomWord && <div className="randomWord">{randomWord.split("").map((w,i)=><p key={i}>{w}</p>)}</div>}<p> Clock : {clock}</p>
                     </div>
                     {start === 0 && <div className="start-game">
                         {role === "player" ? <p>Wait game starts when host is ready ...</p> : <button onClick={() => { gameStart() }}>Start</button>}
                     </div>}
+                    {winner===1 && <div className="start-game"><p>{winnerMessage}  <br></br>Choosing new host...</p></div>}
                     <div className={role === "player" ? "board-block" : ""}>
                         <Canvas sendCanvas={sendCanvasPositions} pixel={pixeData} />
                     </div>

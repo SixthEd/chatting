@@ -138,7 +138,7 @@ export const Canvas = (props) => {
                 {paintingColors.map((c) => <button style={{ backgroundColor: c }} onClick={() => { setColor(c); setIsDrawing(1) }}>{c}</button>)}
             </div>
 
-            <canvas id="canvas-container" width="1200" height="775" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
+            <canvas id="canvas-container" width="1200" height="765" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
 
         </div>
     </div>
