@@ -38,7 +38,9 @@ const roomMessageType = {
     chooseCreator: 10,
     choosePlayer: 11,
     randomWord: 12,
-    winner: 13
+    winner: 13,
+    Drawing: 14,
+    ClearDrawing: 15
 };
 
 const creators = {};
@@ -187,7 +189,7 @@ router.get("/ws", (req, res) => {
             }),
         );
 
-        Object.entries(userSockets).forEach(([id,client]) => {
+        Object.entries(userSockets).forEach(([id, client]) => {
             if (client !== socket && client.readyState === socket.OPEN) {
                 client.send(
                     JSON.stringify({
@@ -199,7 +201,7 @@ router.get("/ws", (req, res) => {
         });
 
         socket.on("close", () => {
-            Object.entries(userSockets).forEach(([id,client]) => {
+            Object.entries(userSockets).forEach(([id, client]) => {
                 if (client !== socket && client.readyState === socket.OPEN) {
                     client.send(
                         JSON.stringify({
@@ -344,148 +346,300 @@ router.get("/wsroom", async (req, res) => {
             console.log(parsedMessage);
             const id = parsedMessage.id
 
-            // switch(parsedMessage.type)
-            // {
-            //     case roomMessageType.password :
-                    
-            //         break;
+            switch (parsedMessage.type) {
+                case roomMessageType.password:
+
+                    if (!classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "creator") {
+                        creators[parsedMessage.password] = id
+                        classRoomPasswords[parsedMessage.password] = { [id]: socket }
+                        const word = generate({ minLength: 3, maxLength: 8 })
+                        randomWords[parsedMessage.password] = word;
+                        socket.send(JSON.stringify({ type: roomMessageType.randomWord, word }))
+                    }
+                    else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "player") {
+                        classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
+                    }
+                    else {
+                        socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }))
+                    }
+
+                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                            if (client !== socket && client.readyState === socket.OPEN) {
+                                client.send(JSON.stringify({ type: roomMessageType.UserConnected, name: parsedMessage.name }))
+                            }
+                        })
+                    }
+                    break;
+
+                case roomMessageType.ReceivedMessage:
+
+                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+
+                        if (parsedMessage.message === randomWords[parsedMessage.password]) {
+                            clearInterval(intervals[parsedMessage.password])
+                            if (classRoomPasswords[parsedMessage.password].hasOwnProperty(parsedMessage.id)) {
+                                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                                    client.send(JSON.stringify({ type: roomMessageType.winner, id: parsedMessage.id, name: parsedMessage.fromName }))
+
+                                })
+
+                                setTimeout(() => {
+                                    const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
+                                    const randomNumber = Math.floor(Math.random() * passwordArray.length);
+                                    const creator = passwordArray[randomNumber];
+                                    creators[parsedMessage.password] = creator
+                                    // console.log(passwordArray, randomNumber, creator)
+                                    const word = generate({ minLength: 3, maxLength: 8 });
+                                    randomWords[parsedMessage.password] = word;
+                                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                                        if (id === creator) {
+                                            client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
+                                        }
+                                        else {
+                                            client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+                                        }
+                                    })
+                                }, 15000)
+                            }
+
+                        }
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                            if (client !== socket && client.readyState === socket.OPEN) {
+                                client.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, from: parsedMessage.fromName, message: parsedMessage.message }))
+                            }
+                        })
+                    }
+
+                    break;
+
+                case roomMessageType.UserDisconnected:
+
+                    delete classRoomPasswords[parsedMessage.password].id
+                    console.log(classRoomPasswords[parsedMessage.password])
+
+                    break;
+
+                case roomMessageType.gameStart:
+
+                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                        if (client !== socket && client.readyState === socket.OPEN) {
+                            client.send(JSON.stringify({ type: roomMessageType.gameStart, message: parsedMessage.message }))
+                        }
+                    })
+
+                    let time = 30;
+                    intervals[parsedMessage.password] = setInterval(() => {
+
+                        if (time === 0) {
+                            chooseCreator();
+                            clearInterval(intervals[parsedMessage.password])
+                        }
+
+                        if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                            Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                                if (client.readyState === socket.OPEN) {
+                                    client.send(JSON.stringify({ type: roomMessageType.clockTime, clockTime: time }))
+                                }
+                            })
+                        }
+
+                        time--;
+
+
+                    }, 1000)
+
+                    const chooseCreator = () => {
+
+                        if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+                            const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
+                            const randomNumber = Math.floor(Math.random() * passwordArray.length);
+                            const creator = passwordArray[randomNumber];
+                            creators[parsedMessage.password] = creator
+                            // console.log(passwordArray, randomNumber, creator)
+                            const word = generate({ minLength: 3, maxLength: 8 });
+                            randomWords[parsedMessage.password] = word;
+                            Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                                if (id === creator) {
+                                    client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
+                                }
+                                else {
+                                    client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+                                }
+                            })
+                        }
+                    }
+
+                    break;
+
+                case roomMessageType.Drawing:
+
+                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 1) {
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                            if (client !== socket && client.readyState === socket.OPEN) {
+                                client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, color: parsedMessage.color, message: parsedMessage.message, lastPosition: parsedMessage.lastPosition, currentPosition: parsedMessage.currentPosition }))
+                            }
+                        })
+                    }
+                    else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 2) {
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+                            if (client !== socket && client.readyState === socket.OPEN) {
+                                client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, x: parsedMessage.x, y: parsedMessage.y }))
+                            }
+                        })
+                    }
+
+                    break;
                 
+                case roomMessageType.ClearDrawing:
+
+                    if(classRoomPasswords.hasOwnProperty(parsedMessage.password))
+                    {
+                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client])=>{
+                            if(client!==socket && client.readyState === socket.OPEN)
+                            {
+                                client.send(JSON.stringify({type:roomMessageType.ClearDrawing}))
+                            }
+                        })
+                    }
+                    
+                    break;
+            }
+
+            // if (parsedMessage.type === roomMessageType.password) {
+
+
+            // if (!classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "creator") {
+            //     creators[parsedMessage.password] = id
+            //     classRoomPasswords[parsedMessage.password] = { [id]: socket }
+            //     const word = generate({ minLength: 3, maxLength: 8 })
+            //     randomWords[parsedMessage.password] = word;
+            //     socket.send(JSON.stringify({ type: roomMessageType.randomWord, word }))
+            // }
+            // else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "player") {
+            //     classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
+            // }
+            // else {
+            //     socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }))
             // }
 
-            if (parsedMessage.type === roomMessageType.password) {
+            // Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //     if (client !== socket && client.readyState === socket.OPEN) {
+            //         client.send(JSON.stringify({ type: roomMessageType.UserConnected, name: parsedMessage.name }))
+            //     }
+            // })
+
+            // }
+            // else if (parsedMessage.type === roomMessageType.ReceivedMessage) {
+            // if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+
+            //     if (parsedMessage.message === randomWords[parsedMessage.password]) {
+            //         clearInterval(intervals[parsedMessage.password])
+            //         if (classRoomPasswords[parsedMessage.password].hasOwnProperty(parsedMessage.id)) {
+            //             Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //                 client.send(JSON.stringify({ type: roomMessageType.winner, id: parsedMessage.id, name: parsedMessage.fromName }))
+
+            //             })
+
+            //             setTimeout(() => {
+            //                 const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
+            //                 const randomNumber = Math.floor(Math.random() * passwordArray.length);
+            //                 const creator = passwordArray[randomNumber];
+            //                 creators[parsedMessage.password] = creator
+            //                 // console.log(passwordArray, randomNumber, creator)
+            //                 const word = generate({ minLength: 3, maxLength: 8 });
+            //                 randomWords[parsedMessage.password] = word;
+            //                 Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //                     if (id === creator) {
+            //                         client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
+            //                     }
+            //                     else {
+            //                         client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+            //                     }
+            //                 })
+            //             }, 15000)
+            //         }
+
+            //     }
+            //     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //         if (client !== socket && client.readyState === socket.OPEN) {
+            //             client.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, from: parsedMessage.fromName, message: parsedMessage.message }))
+            //         }
+            //     })
+            // }
+            // }
+            // else if (parsedMessage.type === roomMessageType.UserDisconnected) {
+
+            // delete classRoomPasswords[parsedMessage.password].id
+            // console.log(classRoomPasswords[parsedMessage.password])
+
+            // }
+            // else if (parsedMessage.type === "Drawing") {
+            // if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 1) {
+            //     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //         if (client !== socket && client.readyState === socket.OPEN) {
+            //             client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, color: parsedMessage.color, message: parsedMessage.message, lastPosition: parsedMessage.lastPosition, currentPosition: parsedMessage.currentPosition }))
+            //         }
+            //     })
+            // }
+            // else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 2) {
+            //     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //         if (client !== socket && client.readyState === socket.OPEN) {
+            //             client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, x: parsedMessage.x, y: parsedMessage.y }))
+            //         }
+            //     })
+            // }
+            // console.log(parsedMessage)
+            // }
+            // else if (parsedMessage.type === roomMessageType.gameStart) {
+            //     Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //         if (client !== socket && client.readyState === socket.OPEN) {
+            //             client.send(JSON.stringify({ type: parsedMessage.type, message: parsedMessage.message }))
+            //         }
+            //     })
+
+            //     let time = 30;
+            //     intervals[parsedMessage.password] = setInterval(() => {
+
+            //         if (time === 0) {
+            //             chooseCreator();
+            //             clearInterval(intervals[parsedMessage.password])
+            //         }
+
+            //         if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+            //             Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //                 if (client.readyState === socket.OPEN) {
+            //                     client.send(JSON.stringify({ type: roomMessageType.clockTime, clockTime: time }))
+            //                 }
+            //             })
+            //         }
+
+            //         time--;
 
 
-                if (!classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "creator") {
-                    creators[parsedMessage.password] = id
-                    classRoomPasswords[parsedMessage.password] = { [id]: socket }
-                    const word = generate({ minLength: 3, maxLength: 8 })
-                    randomWords[parsedMessage.password] = word;
-                    socket.send(JSON.stringify({ type: roomMessageType.randomWord, word }))
-                }
-                else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "player") {
-                    classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
-                }
-                else {
-                    socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }))
-                }
+            //     }, 1000)
 
-                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                    if (client !== socket && client.readyState === socket.OPEN) {
-                        client.send(JSON.stringify({ type: roomMessageType.UserConnected, name: parsedMessage.name }))
-                    }
-                })
+            //     const chooseCreator = () => {
 
-            }
-            else if (parsedMessage.type === roomMessageType.ReceivedMessage) {
-                if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
-
-                    if (parsedMessage.message === randomWords[parsedMessage.password]) {
-                        clearInterval(intervals[parsedMessage.password])
-                        if (classRoomPasswords[parsedMessage.password].hasOwnProperty(parsedMessage.id)) {
-                            Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client])=>{
-                                client.send(JSON.stringify({ type: roomMessageType.winner, id: parsedMessage.id, name: parsedMessage.fromName }))
-
-                            })
-
-                            setTimeout(() => {
-                                const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
-                                const randomNumber = Math.floor(Math.random() * passwordArray.length);
-                                const creator = passwordArray[randomNumber];
-                                creators[parsedMessage.password] = creator
-                                // console.log(passwordArray, randomNumber, creator)
-                                const word = generate({ minLength: 3, maxLength: 8 });
-                                randomWords[parsedMessage.password] = word;
-                                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                                    if (id === creator) {
-                                        client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
-                                    }
-                                    else {
-                                        client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
-                                    }
-                                })
-                            }, 15000)
-                        }
-
-                    }
-                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                        if (client !== socket && client.readyState === socket.OPEN) {
-                            client.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, from: parsedMessage.fromName, message: parsedMessage.message }))
-                        }
-                    })
-                }
-            }
-            else if (parsedMessage.type === roomMessageType.UserDisconnected) {
-
-                delete classRoomPasswords[parsedMessage.password].id
-                console.log(classRoomPasswords[parsedMessage.password])
-
-            }
-            else if (parsedMessage.type === "Drawing") {
-                if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 1) {
-                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                        if (client !== socket && client.readyState === socket.OPEN) {
-                            client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, color: parsedMessage.color, message: parsedMessage.message, lastPosition: parsedMessage.lastPosition, currentPosition: parsedMessage.currentPosition }))
-                        }
-                    })
-                }
-                else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.isDrawing === 2) {
-                    Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                        if (client !== socket && client.readyState === socket.OPEN) {
-                            client.send(JSON.stringify({ type: parsedMessage.type, isDrawing: parsedMessage.isDrawing, x: parsedMessage.x, y: parsedMessage.y }))
-                        }
-                    })
-                }
-                // console.log(parsedMessage)
-            }
-            else if (parsedMessage.type === roomMessageType.gameStart) {
-                Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                    if (client !== socket && client.readyState === socket.OPEN) {
-                        client.send(JSON.stringify({ type: parsedMessage.type, message: parsedMessage.message }))
-                    }
-                })
-
-                let time = 30;
-                intervals[parsedMessage.password] = setInterval(() => {
-
-                    if (time === 0) {
-                        chooseCreator();
-                        clearInterval(intervals[parsedMessage.password])
-                    }
-
-                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
-                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                            if (client.readyState === socket.OPEN) {
-                                client.send(JSON.stringify({ type: roomMessageType.clockTime, clockTime: time }))
-                            }
-                        })
-                    }
-
-                    time--;
-
-
-                }, 1000)
-
-                const chooseCreator = () => {
-
-                    if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
-                        const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
-                        const randomNumber = Math.floor(Math.random() * passwordArray.length);
-                        const creator = passwordArray[randomNumber];
-                        creators[parsedMessage.password] = creator
-                        // console.log(passwordArray, randomNumber, creator)
-                        const word = generate({ minLength: 3, maxLength: 8 });
-                        randomWords[parsedMessage.password] = word;
-                        Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
-                            if (id === creator) {
-                                client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
-                            }
-                            else {
-                                client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
-                            }
-                        })
-                    }
-                }
-            }
+            //         if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
+            //             const passwordArray = Object.keys(classRoomPasswords[parsedMessage.password])
+            //             const randomNumber = Math.floor(Math.random() * passwordArray.length);
+            //             const creator = passwordArray[randomNumber];
+            //             creators[parsedMessage.password] = creator
+            //             // console.log(passwordArray, randomNumber, creator)
+            //             const word = generate({ minLength: 3, maxLength: 8 });
+            //             randomWords[parsedMessage.password] = word;
+            //             Object.entries(classRoomPasswords[parsedMessage.password]).forEach(([id, client]) => {
+            //                 if (id === creator) {
+            //                     client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
+            //                 }
+            //                 else {
+            //                     client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
+            //                 }
+            //             })
+            //         }
+            //     }
+            // }
 
 
 

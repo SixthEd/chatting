@@ -10,7 +10,8 @@ export const Canvas = (props) => {
     const { classRoomPassword } = useContext(AuthContext)
     const [isDrawing, setIsDrawing] = useState(0)
     const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 })
-    const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 })
+    const [currentPosition, setCurrentPosition] = useState({ x: 0, y: 0 });
+    const roomMessageType = {Drawing: 14}
     const paintingColors = [
         "Red",
         "Orange",
@@ -104,7 +105,7 @@ export const Canvas = (props) => {
             const { x, y } = position(event);
             var ctx = canvas.getContext("2d");
             ctx.beginPath();
-            props.sendCanvas({ type: "Drawing", isDrawing, color, lastPosition, currentPosition, password: classRoomPassword })
+            props.sendCanvas({ type: roomMessageType.Drawing , isDrawing, color, lastPosition, currentPosition, password: classRoomPassword })
             ctx.moveTo(lastPosition.x, lastPosition.y);
             ctx.lineTo(currentPosition.x, currentPosition.y);
             ctx.lineWidth = 2;
@@ -117,11 +118,22 @@ export const Canvas = (props) => {
             const ctx = canvas.getContext("2d");
 
             const { x, y } = position(event)
-            props.sendCanvas({ type: "Drawing", isDrawing, x, y, password: classRoomPassword })
+            props.sendCanvas({ type: roomMessageType.Drawing , isDrawing, x, y, password: classRoomPassword })
 
             ctx.clearRect(x, y, 20, 20)
         }
     }
+
+    const clearCanvas = ()=>{
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        // const rect = canvas.getBoundingClientRect();
+        ctx.clearRect(0,0,1200, 760)
+    }
+
+    useEffect(()=>{
+        props.setExposeFunction(()=>clearCanvas())
+    },[])
 
 
     return <div className="container">
@@ -134,11 +146,13 @@ export const Canvas = (props) => {
                 <div>
                     <button onClick={(e) => { setIsDrawing(2); }} >Clean</button>
                     <button onClick={(e) => { setIsDrawing(1); }}>Pencil</button>
+                    <button onClick={()=>{clearCanvas(); props.sendClearDraw()}}>Clear</button>
+                    {/* <button onClick={(e)=>{ clearBoard()}}></button> */}
                 </div>
                 {paintingColors.map((c) => <button style={{ backgroundColor: c }} onClick={() => { setColor(c); setIsDrawing(1) }}>{c}</button>)}
             </div>
 
-            <canvas id="canvas-container" width="1200" height="765" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
+            <canvas id="canvas-container" width="1200" height="760" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
 
         </div>
     </div>
