@@ -226,7 +226,7 @@ function Room(props) {
 
     const sendMessage = () => {
         const user = JSON.parse(localStorage.getItem("user"))
-        ws.current.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, message, id: user.id, fromName: user.name, password: classRoomPassword }));
+        ws.current.send(JSON.stringify({ type: roomMessageType.ReceivedMessage, message, id: user.id, fromName: user.name, password: classRoomPassword, role }));
         setMessageList((old) => [...old, { message, from: "me" }])
         setMessage("")
     }
@@ -269,7 +269,7 @@ function Room(props) {
             <div className="room-board-container">
                 <div>
                     <div className="password-clock">
-                        <p>Room Password : {classRoomPassword}</p>{randomWord && <div className="randomWord">{randomWord.split("").map((w, i) => <p key={i}>{w}</p>)}</div>}<p> Clock : {clock}</p>
+                        <p>Room Password : {classRoomPassword}</p>{randomWord && <div className="randomWord">{randomWord.toUpperCase().split("").map((w, i) => <p key={i}>{w}</p>)}</div>}<p> Clock : {clock}</p>
                     </div>
                     {start === 0 && <div className="start-game">
                         {role === "player" ? <p>Wait game starts when host is ready ...</p> : <button onClick={() => { gameStart() }}>Start</button>}

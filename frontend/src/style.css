@@ -16,7 +16,7 @@ body {
     justify-content: space-between;
     font-size: large;
     /* From https://css.glass */
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(39 38 38 / 20%);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
@@ -585,7 +585,7 @@ video {
 
 .classRoom {
     width: 100vw;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(39 38 38 / 20%);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
@@ -641,7 +641,7 @@ video {
     display: flex;
     flex-direction: column;
     /* border:1px solid black */
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(0 0 0 / 45%);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
@@ -725,7 +725,7 @@ video {
 
 .room-chatBox-container .top  .message-text {
     background-color: rgb(57, 134, 223);
-
+    color:white
 }
 
 .room-chatBox-container .top .message .right-message {
@@ -741,14 +741,19 @@ video {
 }
 
 canvas {
-    background-color: rgb(78, 78, 128);
+    background-color: rgb(26, 25, 25);
     padding: 0;
     border: 1px solid rgba(66, 64, 64, 0.37);
 }
 
-.container .tools {
+#canvas-container{
     display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
+
+
 
 .canvas-board {
     display: flex;
@@ -758,15 +763,20 @@ canvas {
 }
 
 .colors-board {
-    background-color: rgba(255, 255, 255, 0.527);
+    background-color: rgb(49 42 42 / 53%);
     padding: 20px;
     margin: 5px;
     display: flex;
-    gap: 2px;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
 }
 
 .colors-board button {
     border-radius: 0%;
+    width: 25px;
+    height: 25px;
+    
 }
 
 .colors-board button:hover {
@@ -774,10 +784,28 @@ canvas {
     cursor: pointer;
 }
 
+.colors-board .pencil-board{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;    
+    gap:25px;
+
+}
+
+.colors-board .pencil-board button{
+    background-color: transparent;
+    font-size: smaller;
+}
+
 
 .board-block {
     position: absolute;
     z-index: -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin:0 auto;
+    width: 80%;
 }
 
 .start-game {
@@ -808,6 +836,8 @@ canvas {
     justify-content: space-between;
     width: 90%;
     margin: 0 auto;
+    color: white;
+    
 }
 
 .room-chatBox-container .top .message .centre-message {
@@ -819,17 +849,24 @@ canvas {
     background-color: grey;
 }
 
+.join-text{
+    color:white
+}
+
 .randomWord{
     display: flex;
     gap:5px;
 }
 
 .randomWord p{
-    background-color: rgb(168, 148, 148);
-    border:2px solid #04AA6D;
+    background-color: #8fcc8a8f;
+    border:3px solid #04AA6D;
     /* padding: 5px; */
     width: 20px;
     height: 20px;
     text-align: center;
     border-radius: 5px;
+    padding: 5px;
+    color:white;
+    font-weight: 800;
 }
