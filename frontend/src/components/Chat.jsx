@@ -144,6 +144,7 @@ function Chat() {
                 .catch((err) => {
                     return;
                 });
+            setMessage("")
         },
         [selectedUser, user],
     );
@@ -348,10 +349,10 @@ function Chat() {
         <div className="chat">
             <div className="friendblock">
                 <div className="friends">
-                    {friends.map((f) => {
+                    {friends.map((f,i) => {
                         return (
                             user.id !== f.id && (
-                                <div>
+                                <div key={i}>
                                     <button
                                         onClick={() => updateSelectedUser(f)}
                                     >
@@ -460,7 +461,7 @@ function Chat() {
                                     showMessage[selectedUser.id].map(
                                         (f, index) => {
                                             return (
-                                                <div className="message-date">
+                                                <div className="message-date" key={index}>
                                                     <div className="date">
                                                         {index - 1 > 0 &&
                                                             showMessage[
@@ -544,6 +545,7 @@ function Chat() {
                                         type="text"
                                         placeholder="Type a message"
                                         name="message"
+                                        value={message}
                                         onChange={(event) => {
                                             updateMessage(event.target.value);
                                         }}

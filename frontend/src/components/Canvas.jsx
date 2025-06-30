@@ -146,7 +146,7 @@ export const Canvas = (props) => {
                     <button onClick={() => { clearCanvas(); props.sendClearDraw() }}><SquareIcon />New</button>
                     {/* <button onClick={(e)=>{ clearBoard()}}></button> */}
                 </div>
-                {paintingColors.map((c) => <button style={{ backgroundColor: c }} onClick={() => { setColor(c); setIsDrawing(1) }}></button>)}
+                {paintingColors.map((c,i) => <button style={{ backgroundColor: c }} key={i} onClick={() => { setColor(c); setIsDrawing(1) }}></button>)}
             </div>
 
             <div id="canvas-container">

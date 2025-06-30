@@ -18,8 +18,8 @@ function Message(props) {
     else {
         h = "10vh"
     }
-    return <div className="chat-box" style={{ height: h }}>
-        <div className="chat-message" style={{ height: h }}>
+    return <div className="chat-box" >
+        <div className="chat-message" >
             {props.img && <div>
                 <img src={props.img} alt=""></img>
             </div>}

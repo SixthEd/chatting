@@ -26,6 +26,7 @@ function ClassRoom() {
 
     return <div className="classRoom">
         <div className="classRoom-container">
+            <p className="classRoom-title">Create a Room</p>
             <div><input type="text" placeholder="Enter room password" onChange={(e) => { setPassword(e.target.value) }} /></div>
             <div className="classRoom-button">
                 <button onClick={() => { setRole("player"); goTo(password) }}>Join</button>

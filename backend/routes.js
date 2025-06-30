@@ -312,7 +312,8 @@ router.get("/wsroom", async (req, res) => {
             if (Object.keys(classRoomPasswords[req.query.password]).length === 0) {
                 delete classRoomPasswords[req.query.password]
                 delete creators[req.query.password]
-                delete randomWords[req.query.password]
+                delete randomWords[req.query.password];
+                clearInterval(intervals[req.query.password]);
                 console.log("classLength", classRoomPasswords)
             }
             else if (creators[req.query.password] == id) {
