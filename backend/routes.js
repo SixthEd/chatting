@@ -23,6 +23,14 @@ const MessageType = {
     ConnectedUserList: 3,
     Status: 4,
     ReceivedMessage: 5,
+    ReceivedImage: 6,
+    ReceivedImageChunk: 7,
+    ReceivedVideo: 8,
+    ReceivedVideoChunk: 9,
+    ReceivedAudio: 10,
+    ReceivedAudioChunk: 11,
+    ReceivedDoc: 12,
+    ReceivedDocChunk: 13
 };
 
 const roomMessageType = {
@@ -49,6 +57,9 @@ const intervals = {};
 
 const randomWords = {};
 
+let base64Data;
+const chunkSize = 10000000;
+let totalChunks;
 //register route
 // router.post("/register", async (req, res) => {});
 
@@ -220,15 +231,95 @@ router.get("/ws", (req, res) => {
 
             console.log(parsedMessage);
             if (senderSocket) {
-                senderSocket.send(
-                    JSON.stringify({
-                        type: MessageType.ReceivedMessage,
-                        from: parsedMessage.from,
-                        message: senderMessage,
-                        send_at: parsedMessage.send_at,
-                        date: parsedMessage.date,
-                    }),
-                );
+                switch (parsedMessage.type) {
+                    case MessageType.ReceivedMessage:
+                        console.log(parsedMessage);
+
+                        senderSocket.send(
+                            JSON.stringify({
+                                type: MessageType.ReceivedMessage,
+                                from: parsedMessage.from,
+                                message: senderMessage,
+                                send_at: parsedMessage.send_at,
+                                date: parsedMessage.date,
+                            }),
+                        );
+                        break;
+                    case MessageType.ReceivedImage:
+                        console.log("imagesending")
+                        base64Data = parsedMessage.image;
+                        totalChunks = Math.ceil(base64Data.length / chunkSize);
+                        for (let i = 0; i < totalChunks; i++) {
+                            const chunk = base64Data.slice(i * chunkSize, (i + 1) * chunkSize);
+                            senderSocket.send(JSON.stringify({
+                                type: MessageType.ReceivedImageChunk,
+                                totalChunks,
+                                partNumber: i,
+                                chunk,
+                                from: parsedMessage.from,
+                                message: senderMessage,
+                                send_at: parsedMessage.send_at,
+                                date: parsedMessage.date,
+                            }))
+                        }
+                        break;
+                    case MessageType.ReceivedVideo:
+                        console.log("videosending")
+                        base64Data = parsedMessage.video;
+                        totalChunks = Math.ceil(base64Data.length / chunkSize);
+                        for (let i = 0; i < totalChunks; i++) {
+                            const chunk = base64Data.slice(i * chunkSize, (i + 1) * chunkSize);
+                            senderSocket.send(JSON.stringify({
+                                type: MessageType.ReceivedVideoChunk,
+                                totalChunks,
+                                partNumber: i,
+                                chunk,
+                                from: parsedMessage.from,
+                                message: senderMessage,
+                                send_at: parsedMessage.send_at,
+                                date: parsedMessage.date,
+                            }))
+                        }
+
+                    case MessageType.ReceivedAudio:
+                        console.log("audiosending")
+                        base64Data = parsedMessage.audio;
+                        totalChunks = Math.ceil(base64Data.length / chunkSize);
+                        for (let i = 0; i < totalChunks; i++) {
+                            const chunk = base64Data.slice(i * chunkSize, (i + 1) * chunkSize);
+                            senderSocket.send(JSON.stringify({
+                                type: MessageType.ReceivedAudioChunk,
+                                totalChunks,
+                                partNumber: i,
+                                chunk,
+                                from: parsedMessage.from,
+                                message: senderMessage,
+                                send_at: parsedMessage.send_at,
+                                date: parsedMessage.date,
+                            }))
+                        }
+                        break;
+                    case MessageType.ReceivedDoc:
+                        console.log("documentsending")
+                        base64Data = parsedMessage.doc;
+                        totalChunks = Math.ceil(base64Data.length / chunkSize);
+                        for (let i = 0; i < totalChunks; i++) {
+                            const chunk = base64Data.slice(i * chunkSize, (i + 1) * chunkSize);
+                            senderSocket.send(JSON.stringify({
+                                type: MessageType.ReceivedDocChunk,
+                                totalChunks,
+                                partNumber: i,
+                                chunk,
+                                from: parsedMessage.from,
+                                message: senderMessage,
+                                send_at: parsedMessage.send_at,
+                                date: parsedMessage.date,
+                                docName: parsedMessage.docName,
+                            }))
+                        }
+                        break;
+
+                }
             }
 
             // web.clients.forEach((client)=>{

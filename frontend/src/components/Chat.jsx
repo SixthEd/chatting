@@ -33,7 +33,20 @@ const MessageType = {
     ConnectedUserList: 3,
     Status: 4,
     ReceivedMessage: 5,
+    ReceivedImage: 6,
+    ReceivedImageChunk: 7,
+    ReceivedVideo: 8,
+    ReceivedVideoChunk: 9,
+    ReceivedAudio: 10,
+    ReceivedAudioChunk: 11,
+    ReceivedDoc: 12,
+    ReceivedDocChunk: 13
 };
+
+let images = [];
+let videos = [];
+let audios = [];
+let docs = [];
 
 function Chat() {
     const { friends, user, setFriends } = useContext(AuthContext);
@@ -69,8 +82,10 @@ function Chat() {
             let doc = "";
             let docName = "";
 
-            if (message.type) {
-                if (message.type === "imgCaption") {
+            const messageType = message.type
+
+            switch (messageType) {
+                case "imgCaption":
                     image = message.image;
                     console.log(message.caption);
                     if (message.caption) {
@@ -78,7 +93,8 @@ function Chat() {
                     } else {
                         message = "";
                     }
-                } else if (message.type === "vCaption") {
+                    break;
+                case "vCaption":
                     video = message.video;
                     console.log(message.caption);
                     if (message.caption) {
@@ -86,7 +102,8 @@ function Chat() {
                     } else {
                         message = "";
                     }
-                } else if (message.type === "audioCaption") {
+                    break;
+                case "audioCaption":
                     audio = message.audio;
                     console.log(message.caption);
                     if (message.caption) {
@@ -94,21 +111,18 @@ function Chat() {
                     } else {
                         message = "";
                     }
-                } else if(message.type === "documentCaption")
-                {
+                    break;
+                case "documentCaption":
                     doc = message.document;
                     docName = message.name;
                     console.log(message.caption);
-                    if(message.caption)
-                    {
-                        message= message.caption;
+                    if (message.caption) {
+                        message = message.caption;
                     }
-                    else
-                    {
-                        message="";
+                    else {
+                        message = "";
                     }
-
-                }
+                    break;
             }
             console.log(docName);
             if (!message && !video && !image && !audio && !doc) {
@@ -121,17 +135,78 @@ function Chat() {
             const date = dateTime.toISOString().split("T")[0];
             console.log(date);
             const send_at = `${hours}:${minutes}`;
-            sendChatBox({ message, send_at, date, image, video, audio, doc , docName});
+            sendChatBox({ message, send_at, date, image, video, audio, doc, docName });
+
             const value = message;
-            ws.current.send(
-                JSON.stringify({
-                    to: selectedUser.id,
-                    from: user.id,
-                    message,
-                    send_at,
-                    date,
-                }),
-            );
+            console.log(messageType)
+            switch (messageType) {
+                case "imgCaption":
+                    ws.current.send(
+                        JSON.stringify({
+                            to: selectedUser.id,
+                            from: user.id,
+                            message,
+                            send_at,
+                            date,
+                            image,
+                            type: MessageType.ReceivedImage
+                        }),
+                    );
+                    break;
+                case "vCaption":
+                    ws.current.send(
+                        JSON.stringify({
+                            to: selectedUser.id,
+                            from: user.id,
+                            message,
+                            send_at,
+                            date,
+                            video,
+                            type: MessageType.ReceivedVideo
+                        }),
+                    );
+                    break;
+                case "audioCaption":
+                    ws.current.send(
+                        JSON.stringify({
+                            to: selectedUser.id,
+                            from: user.id,
+                            message,
+                            send_at,
+                            date,
+                            audio,
+                            type: MessageType.ReceivedAudio
+                        }),
+                    );
+                    break;
+                case "documentCaption":
+                    ws.current.send(
+                        JSON.stringify({
+                            to: selectedUser.id,
+                            from: user.id,
+                            message,
+                            send_at,
+                            date,
+                            doc,
+                            docName,
+                            type: MessageType.ReceivedDoc
+                        }),
+                    );
+                    break;
+                default:
+                    ws.current.send(
+                        JSON.stringify({
+                            to: selectedUser.id,
+                            from: user.id,
+                            message,
+                            send_at,
+                            date,
+                            type: MessageType.ReceivedMessage
+                        }),
+                    );
+
+            }
+
             axioInst
                 .put("/updatechat", {
                     user,
@@ -233,6 +308,167 @@ function Chat() {
                     break;
                 }
 
+                case MessageType.ReceivedImageChunk:
+                    images[response.partNumber] = response.chunk;
+                    if (response.partNumber === response.totalChunks - 1) {
+                        const fullImage = images.join("");
+                        console.log("fullImage")
+                        const value = {
+                            from: response.from,
+                            to: response.to,
+                            message: response.message,
+                            send_at: response.send_at,
+                            date: response.date,
+                            image: fullImage
+                        };
+                        images = [];
+                        setShowMessage((prevValue) => {
+                            if (prevValue[response.from]) {
+                                return {
+                                    ...prevValue,
+                                    [response.from]: [
+                                        ...prevValue[response.from],
+                                        value,
+                                    ],
+                                };
+                            }
+
+                            return {
+                                ...prevValue,
+                                [response.from]: [value],
+                            };
+                        });
+
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
+
+                        // receivedChatBox(response.senderMessage);
+                    }
+                    break;
+                case MessageType.ReceivedVideoChunk:
+                    videos[response.partNumber] = response.chunk;
+                    if (response.partNumber === response.totalChunks - 1) {
+                        const videoImage = videos.join("");
+                        console.log("fullImage")
+                        const value = {
+                            from: response.from,
+                            to: response.to,
+                            message: response.message,
+                            send_at: response.send_at,
+                            date: response.date,
+                            video: videoImage
+                        };
+                        videos = [];
+                        setShowMessage((prevValue) => {
+                            if (prevValue[response.from]) {
+                                return {
+                                    ...prevValue,
+                                    [response.from]: [
+                                        ...prevValue[response.from],
+                                        value,
+                                    ],
+                                };
+                            }
+
+                            return {
+                                ...prevValue,
+                                [response.from]: [value],
+                            };
+                        });
+
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
+
+                        // receivedChatBox(response.senderMessage);
+                    }
+                    break;
+                case MessageType.ReceivedAudioChunk:
+                    audios[response.partNumber] = response.chunk;
+                    if (response.partNumber === response.totalChunks - 1) {
+                        const audioImage = audios.join("");
+                        console.log("fullImage")
+                        const value = {
+                            from: response.from,
+                            to: response.to,
+                            message: response.message,
+                            send_at: response.send_at,
+                            date: response.date,
+                            audio: audioImage
+                        };
+                        audios = [];
+                        setShowMessage((prevValue) => {
+                            if (prevValue[response.from]) {
+                                return {
+                                    ...prevValue,
+                                    [response.from]: [
+                                        ...prevValue[response.from],
+                                        value,
+                                    ],
+                                };
+                            }
+
+                            return {
+                                ...prevValue,
+                                [response.from]: [value],
+                            };
+                        });
+
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
+
+                        // receivedChatBox(response.senderMessage);
+                    }
+                    break;
+                case MessageType.ReceivedDocChunk:
+                    docs[response.partNumber] = response.chunk;
+                    if (response.partNumber === response.totalChunks - 1) {
+                        const docImage = docs.join("");
+                        console.log("fullImage")
+                        const value = {
+                            from: response.from,
+                            to: response.to,
+                            message: response.message,
+                            send_at: response.send_at,
+                            date: response.date,
+                            doc: docImage,
+                            docName: response.docName
+                        };
+                        audios = [];
+                        setShowMessage((prevValue) => {
+                            if (prevValue[response.from]) {
+                                return {
+                                    ...prevValue,
+                                    [response.from]: [
+                                        ...prevValue[response.from],
+                                        value,
+                                    ],
+                                };
+                            }
+
+                            return {
+                                ...prevValue,
+                                [response.from]: [value],
+                            };
+                        });
+
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
+
+                        // receivedChatBox(response.senderMessage);
+                    }
+                    break;
                 default:
                     break;
             }
@@ -336,7 +572,7 @@ function Chat() {
         setShowAudioBlock(0);
     }, []);
 
-    const updateShowDocumentBlock = useCallback(()=> {
+    const updateShowDocumentBlock = useCallback(() => {
         setBlock(0);
         setShowDocumentBlock(0);
     })
@@ -349,7 +585,7 @@ function Chat() {
         <div className="chat">
             <div className="friendblock">
                 <div className="friends">
-                    {friends.map((f,i) => {
+                    {friends.map((f, i) => {
                         return (
                             user.id !== f.id && (
                                 <div key={i}>
@@ -431,7 +667,7 @@ function Chat() {
                                 </div>
                                 <div className="connecting-uleft">
                                     <div>{selectedUser && `${selectedUser.name}`}</div>
-                                    <div onClick={()=>setCall(1)}><CallRoundedIcon /></div>
+                                    <div onClick={() => setCall(1)}><CallRoundedIcon /></div>
                                 </div>
                             </div>
                         )}
@@ -450,50 +686,50 @@ function Chat() {
                                 updateVideo={updateShowVideoBlock}
                                 sendMess={sendMessage}
                             />
-                        ) : showDocumentBlock===1? 
-                            <Document 
+                        ) : showDocumentBlock === 1 ?
+                            <Document
                                 updateDocument={updateShowDocumentBlock}
-                                sendMess={sendMessage}    
-                            />:(call ===1)?<Call />: (
-                            <div className="chats">
-                                {selectedUser &&
-                                    showMessage[selectedUser.id] &&
-                                    showMessage[selectedUser.id].map(
-                                        (f, index) => {
-                                            return (
-                                                <div className="message-date" key={index}>
-                                                    <div className="date">
-                                                        {index - 1 > 0 &&
-                                                            showMessage[
-                                                                selectedUser.id
-                                                            ][index - 1].date <
-                                                            f.date &&
-                                                            f.date}
-                                                    </div>
+                                sendMess={sendMessage}
+                            /> : (call === 1) ? <Call /> : (
+                                <div className="chats">
+                                    {selectedUser &&
+                                        showMessage[selectedUser.id] &&
+                                        showMessage[selectedUser.id].map(
+                                            (f, index) => {
+                                                return (
+                                                    <div className="message-date" key={index}>
+                                                        <div className="date">
+                                                            {index - 1 > 0 &&
+                                                                showMessage[
+                                                                    selectedUser.id
+                                                                ][index - 1].date <
+                                                                f.date &&
+                                                                f.date}
+                                                        </div>
 
-                                                    <div
-                                                        className={
-                                                            f.from === user.id
-                                                                ? "send"
-                                                                : "received"
-                                                        }
-                                                    >
-                                                        <Message
-                                                            text={f.message}
-                                                            time={f.send_at}
-                                                            img={f.image}
-                                                            vid={f.video}
-                                                            aud={f.audio}
-                                                            doc={f.doc}
-                                                            docName={f.docName}
-                                                        />
+                                                        <div
+                                                            className={
+                                                                f.from === user.id
+                                                                    ? "send"
+                                                                    : "received"
+                                                            }
+                                                        >
+                                                            <Message
+                                                                text={f.message}
+                                                                time={f.send_at}
+                                                                img={f.image}
+                                                                vid={f.video}
+                                                                aud={f.audio}
+                                                                doc={f.doc}
+                                                                docName={f.docName}
+                                                            />
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        },
-                                    )}
-                            </div>
-                        )}
+                                                );
+                                            },
+                                        )}
+                                </div>
+                            )}
                     </div>
                     {showFileBlock === 0 &&
                         showAudioBlock === 0 &&
@@ -503,10 +739,10 @@ function Chat() {
                                     <button>
                                         <EmojiEmotionsIcon />
                                     </button>
-                                    {showMenu === 1 ? <button onClick={() => { setShowMenu(0) }}><CloseRoundedIcon /></button> : <button onClick={() => { setShowMenu(1) }}><AddRoundedIcon/></button>}
+                                    {showMenu === 1 ? <button onClick={() => { setShowMenu(0) }}><CloseRoundedIcon /></button> : <button onClick={() => { setShowMenu(1) }}><AddRoundedIcon /></button>}
                                     {showMenu === 1 &&
-                                        <div class="drop-down">
-                                            <div class="drop-block">
+                                        <div className="drop-down">
+                                            <div className="drop-block">
 
                                                 <button
                                                     onClick={() => {
@@ -532,8 +768,8 @@ function Chat() {
                                                     <div><AddAPhotoRoundedIcon /></div>
                                                     <div>Photo</div>
                                                 </button>
-                                                <button onClick={()=>{setShowDocumentBlock(1)}}>
-                                                    <div><AttachFileRoundedIcon/></div>
+                                                <button onClick={() => { setShowDocumentBlock(1) }}>
+                                                    <div><AttachFileRoundedIcon /></div>
                                                     <div>Document</div>
                                                 </button>
                                             </div>

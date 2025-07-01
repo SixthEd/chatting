@@ -470,8 +470,8 @@ button:hover {
 }
 
 .file-form img {
-    width: 50vw;
-    height: 60vh;
+    width: 100%;
+    height: 100%;
 }
 
 .file-form form {
@@ -599,7 +599,7 @@ button:hover {
 }
 
 video {
-    width: 80vw;
+    width:fit-content;
 }
 
 .classRoom {
