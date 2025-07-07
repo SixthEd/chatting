@@ -40,7 +40,8 @@ const MessageType = {
     ReceivedAudio: 10,
     ReceivedAudioChunk: 11,
     ReceivedDoc: 12,
-    ReceivedDocChunk: 13
+    ReceivedDocChunk: 13,
+    Offer:14,
 };
 
 let images = [];
@@ -60,6 +61,7 @@ function Chat() {
     const [block, setBlock] = useState(0);
     const [showMenu, setShowMenu] = useState(0);
     const [call, setCall] = useState(0);
+    const [offer, setOffer] = useState(null)
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
     const ws = useRef("");
@@ -339,11 +341,11 @@ function Chat() {
                             };
                         });
 
-                        // axioInst.put("/updatechat", {
-                        //     user,
-                        //     friend: response.sender,
-                        //     message: value,
-                        // });
+                        axioInst.put("/updatechat", {
+                            user,
+                            friend: response.sender,
+                            message: value,
+                        });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -379,11 +381,11 @@ function Chat() {
                             };
                         });
 
-                        // axioInst.put("/updatechat", {
-                        //     user,
-                        //     friend: response.sender,
-                        //     message: value,
-                        // });
+                        axioInst.put("/updatechat", {
+                            user,
+                            friend: response.sender,
+                            message: value,
+                        });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -419,11 +421,11 @@ function Chat() {
                             };
                         });
 
-                        // axioInst.put("/updatechat", {
-                        //     user,
-                        //     friend: response.sender,
-                        //     message: value,
-                        // });
+                        axioInst.put("/updatechat", {
+                            user,
+                            friend: response.sender,
+                            message: value,
+                        });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -460,15 +462,18 @@ function Chat() {
                             };
                         });
 
-                        // axioInst.put("/updatechat", {
-                        //     user,
-                        //     friend: response.sender,
-                        //     message: value,
-                        // });
+                        axioInst.put("/updatechat", {
+                            user,
+                            friend: response.sender,
+                            message: value,
+                        });
 
                         // receivedChatBox(response.senderMessage);
                     }
                     break;
+                case MessageType.Offer:
+                    setOffer(response.offer)
+                    console.log(response.offer)
                 default:
                     break;
             }
@@ -690,7 +695,7 @@ function Chat() {
                             <Document
                                 updateDocument={updateShowDocumentBlock}
                                 sendMess={sendMessage}
-                            /> : (call === 1) ? <Call /> : (
+                            /> : (call === 1) ? <Call ws={ws.current} selectedUser={selectedUser} offer={offer} setCall={setCall} setOffer={setOffer}/> : (
                                 <div className="chats">
                                     {selectedUser &&
                                         showMessage[selectedUser.id] &&

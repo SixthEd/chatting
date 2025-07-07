@@ -599,7 +599,7 @@ button:hover {
 }
 
 video {
-    width:fit-content;
+    width: fit-content;
 }
 
 .classRoom {
@@ -626,8 +626,8 @@ video {
     width: fit-content;
 }
 
-.classRoom-container input::placeholder{
-    color:rgba(255, 255, 255, 0.774);
+.classRoom-container input::placeholder {
+    color: rgba(255, 255, 255, 0.774);
 }
 
 .classRoom-container input[type=text] {
@@ -898,4 +898,83 @@ canvas {
     font-size: 4rem;
     color: white;
     font-family: sans-serif;
+}
+
+#remote-video{
+    width: 100%;
+    height:100%;
+    padding: 0;
+    margin:0;
+    object-fit: cover;
+    z-index: -2;
+}
+
+#remote-video1{
+    width: 20%;
+    height: 30%;
+    position: absolute;
+    z-index: -1;
+    top: 20px;
+    right: 50px;
+    /* object-fit: cover; */
+}
+
+#local-video{   
+    width:20%;
+    height: 30%;
+    position: absolute;
+    z-index: -1;
+    top: 20px;
+    right: 50px;
+    /* object-fit: cover; */
+
+}
+
+#local-video1{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    padding: 0%;
+    margin: 0%;
+    z-index: -2;
+    object-fit: cover;
+}
+
+
+#call-video {
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: 93%;
+}
+
+.calling-buttons {
+    display: flex;
+    position: absolute;
+    z-index: 1;
+    gap:50px;
+    bottom:30px;
+    width: 100%;
+    justify-content: center;
+}
+
+.calling-buttons button{
+    background-color: rgba(12, 12, 12, 0.507);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+
+}
+
+.calling-buttons button:hover{
+    transform: none;
+
+}
+
+.calling-video {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    position: absolute;
+    z-index: -1;
 }
