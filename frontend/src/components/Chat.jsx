@@ -9,9 +9,9 @@ import { AuthContext } from "./AuthContext";
 import Message from "./Message";
 import axioInst from "../utils";
 import SendSharpIcon from "@mui/icons-material/SendSharp";
-import AddReactionIcon from "@mui/icons-material/AddReaction";
+// import AddReactionIcon from "@mui/icons-material/AddReaction";
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
+// import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import File from "./File";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
@@ -19,7 +19,7 @@ import AudiotrackIcon from "@mui/icons-material/Audiotrack";
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import AddAPhotoRoundedIcon from '@mui/icons-material/AddAPhotoRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
+// import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded';
 import CallRoundedIcon from '@mui/icons-material/CallRounded';
 import Video from "./Video";
@@ -41,7 +41,10 @@ const MessageType = {
     ReceivedAudioChunk: 11,
     ReceivedDoc: 12,
     ReceivedDocChunk: 13,
-    Offer:14,
+    Offer: 14,
+    Answer: 15,
+    IceCandidate: 16,
+    DisConnectCall: 17
 };
 
 let images = [];
@@ -61,7 +64,9 @@ function Chat() {
     const [block, setBlock] = useState(0);
     const [showMenu, setShowMenu] = useState(0);
     const [call, setCall] = useState(0);
-    const [offer, setOffer] = useState(null)
+    const [offer, setOffer] = useState(null);
+    const peerConnectionRef = useRef(null);
+    const [receiveCall, setReceiveCall] =useState(true);
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
     const ws = useRef("");
@@ -124,6 +129,8 @@ function Chat() {
                     else {
                         message = "";
                     }
+                    break;
+                default:
                     break;
             }
             console.log(docName);
@@ -233,7 +240,7 @@ function Chat() {
         ws.current = web;
         console.log(ws);
 
-        ws.current.onmessage = (event) => {
+        ws.current.onmessage = async(event) => {
             const response = JSON.parse(event.data);
 
             console.log(response);
@@ -474,11 +481,36 @@ function Chat() {
                 case MessageType.Offer:
                     setOffer(response.offer)
                     console.log(response.offer)
+                    break;
+                case MessageType.IceCandidate:
+                    if(peerConnectionRef.current)
+                    {
+                        await peerConnectionRef.current.addIceCandidate(response.candidate);
+                    }
+                    break;
+
+                case MessageType.Answer:
+                    if (peerConnectionRef.current && peerConnectionRef.current.signalingState === "have-local-offer") {
+                        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(response.answer));
+                    }
+                    setReceiveCall(1);
+                    break;
+
+                case MessageType.DisConnectCall:
+                    peerConnectionRef.current.close();
+                    peerConnectionRef.current=null;
+                    setCall(0);
+                    setOffer(null);
+                    setReceiveCall(0);
+                    console.log("Disconnected");
+                    break;
+
+
                 default:
                     break;
             }
         };
-    }, []);
+    }, [setFriends, user]);
 
     const updateSelectedUser = useCallback(
         (info) => {
@@ -512,7 +544,7 @@ function Chat() {
                 })
                 .catch((err) => { });
         },
-        [friends, user, showMessage],
+        [user, showMessage],
     );
 
     const updateMessage = useCallback(
@@ -526,6 +558,10 @@ function Chat() {
         },
         [selectedUser],
     );
+
+    const setPeerConnection =useCallback((pc)=>{
+        peerConnectionRef.current= pc
+    })
 
     const sendChatBox = useCallback(
         (value) => {
@@ -580,7 +616,7 @@ function Chat() {
     const updateShowDocumentBlock = useCallback(() => {
         setBlock(0);
         setShowDocumentBlock(0);
-    })
+    }, [])
 
     useEffect(() => {
         console.log(block);
@@ -695,7 +731,7 @@ function Chat() {
                             <Document
                                 updateDocument={updateShowDocumentBlock}
                                 sendMess={sendMessage}
-                            /> : (call === 1) ? <Call ws={ws.current} selectedUser={selectedUser} offer={offer} setCall={setCall} setOffer={setOffer}/> : (
+                            /> : (call === 1) ? <Call ws={ws.current} selectedUser={selectedUser} offer={offer} setCall={setCall} setOffer={setOffer} setPeerConnection={setPeerConnection} peerConnection={peerConnectionRef.current} receiveCall={receiveCall} setReceiveCall={setReceiveCall}/> : (
                                 <div className="chats">
                                     {selectedUser &&
                                         showMessage[selectedUser.id] &&

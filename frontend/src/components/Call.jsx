@@ -3,9 +3,9 @@ import CallEndIcon from '@mui/icons-material/CallEnd';
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import CallIcon from '@mui/icons-material/Call';
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
-import { green } from "@mui/material/colors";
-import MicNoneIcon from '@mui/icons-material/MicNone';
-import MicOffIcon from '@mui/icons-material/MicOff';
+// import { green } from "@mui/material/colors";
+// import MicNoneIcon from '@mui/icons-material/MicNone';
+// import MicOffIcon from '@mui/icons-material/MicOff';
 import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
 
 
@@ -14,13 +14,18 @@ function Call(props) {
     const remoteStreamRef = useRef(null);
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
-    const peerConnection = useRef(null);
     const offerRef = useState(null);
     const answerRef = useRef(null);
     const [receiveCall, setReceiveCall] = useState(true);
     const [receiverToggle, setReceiveToggle] = useState(0);
     const [toggle, setToggle] = useState(false);
-    
+    const currentPeerRef = useRef(null);
+
+    useEffect(() => {
+        currentPeerRef.current = props.peerConnection;
+    }, [props.peerConnection]);
+
+
     const MessageType = {
         Offer: 14,
         Answer: 15,
@@ -32,7 +37,7 @@ function Call(props) {
         audio: false
     }
 
-        
+
     useEffect(() => {
         if (props.offer) {
             setReceiveToggle(1)
@@ -41,6 +46,8 @@ function Call(props) {
             setReceiveToggle(0)
         }
     }, [props.offer])
+
+
 
     let peerConfiguration = {
         iceServers: [
@@ -59,109 +66,104 @@ function Call(props) {
 
     }
 
-    
+
 
     const createPeerConnection = async () => {
-        peerConnection.current = new RTCPeerConnection(peerConfiguration);
+        const pc = new RTCPeerConnection(peerConfiguration);
+        props.setPeerConnection(pc);
+
         remoteStreamRef.current = new MediaStream();
         remoteVideoRef.current.srcObject = remoteStreamRef.current;
 
+        // ✅ Attach local tracks
         localStreamRef.current.getTracks().forEach(track => {
-            peerConnection.current.addTrack(track, localStreamRef.current)
+            pc.addTrack(track, localStreamRef.current);
         });
 
-        peerConnection.current.addEventListener("icecandidate", (event) => {
+        // ✅ Attach ICE candidate listener
+        pc.addEventListener("icecandidate", (event) => {
             if (event.candidate) {
-                console.log("New Candidates", event.candidate)
-                props.ws.send(JSON.stringify({ type: MessageType.IceCandidate, candidate: event.candidate, to: props.selectedUser.id }));
+                console.log("New ICE Candidate:", event.candidate);
+                props.ws.send(JSON.stringify({
+                    type: MessageType.IceCandidate,
+                    candidate: event.candidate,
+                    to: props.selectedUser.id
+                }));
             }
-        })
+        });
 
 
-        props.ws.onmessage = async (message) => {
-            const parsedMessage = JSON.parse(message.data);
-            if (parsedMessage.type === MessageType.IceCandidate) {
-                await peerConnection.current.addIceCandidate(parsedMessage.candidate)
-            }
-            else if (parsedMessage.type === MessageType.Answer) {
-                if (peerConnection.current.signalingState === "have-local-offer") {
-                    await peerConnection.current.setRemoteDescription(new RTCSessionDescription(parsedMessage.answer))
+        // ✅ Attach track handler for remote stream
+        pc.addEventListener("track", (event) => {
+            console.log("Track received from remote peer:", event.streams);
+            event.streams[0].getTracks().forEach(track => {
+                remoteStreamRef.current.addTrack(track);
+            });
+        });
 
-                }
-                setReceiveCall(1);
-            }
-            else if (parsedMessage.type === MessageType.DisConnectCall) {
-                if (peerConnection.current) {
-                    peerConnection.current.close();
-                    peerConnection.current = null;
-                }
-                props.setCall(0)
-                console.log("disconnected")
-            }
-        }
+        return pc;
 
-        peerConnection.current.addEventListener("track", (event) => {
-            event.streams[0].getTracks().forEach((track) => {
-                remoteStreamRef.current.addTrack(track, remoteStreamRef.current)
-            })
-        })
 
-        // if(props.offer)
-        // {
-        //     await peerConnection.current.setRemoteDescription(props.offer)
-        // }
-
+        
     }
+
+
 
     const receiver = async () => {
         await fetchUserMedia();
-        if (peerConnection.current) {
-            peerConnection.current.close();
-            peerConnection.current = null;
+        if (props.peerConnection) {
+            props.peerConnection.close();
+            props.setPeerConnection(null);
         }
-        await createPeerConnection();
-        createAnswer();
-        setReceiveCall(1);
-        // setReceiveToggle(0)
-        props.setOffer(null);
+        const pc = await createPeerConnection();
+        createAnswer(pc);
+        props.setReceiveCall(1);
+        setReceiveToggle(0)
+        // props.setOffer(null);
     }
 
-    const createAnswer = async () => {
-        peerConnection.current.setRemoteDescription(props.offer)
-        answerRef.current = await peerConnection.current.createAnswer();
-        peerConnection.current.setLocalDescription(answerRef.current);
+    const createAnswer = async (pc) => {
+
+        if (props.offer) {
+            console.log("line 188 props.offer")
+        }
+        pc.setRemoteDescription(props.offer);
+        answerRef.current = await pc.createAnswer();
+        pc.setLocalDescription(answerRef.current);
         props.ws.send(JSON.stringify({ type: MessageType.Answer, answer: answerRef.current, to: props.selectedUser.id }))
         setReceiveToggle(0)
     }
 
-    const createOffer = async () => {
-        offerRef.current = await peerConnection.current.createOffer();
-        peerConnection.current.setLocalDescription(offerRef.current);
+    const createOffer = async (pc) => {
+        offerRef.current = await pc.createOffer();
+        pc.setLocalDescription(offerRef.current);
         props.ws.send(JSON.stringify({ type: MessageType.Offer, offer: offerRef.current, to: props.selectedUser.id }))
     }
 
     const call = async () => {
         await fetchUserMedia();
 
-        if (peerConnection.current) {
-            peerConnection.current.close();
-            peerConnection.current = null;
+        if (props.peerConnection) {
+            props.peerConnection.close();
+            props.setPeerConnection(null);
         }
 
-        await createPeerConnection();
-        await createOffer();
+        const pc = await createPeerConnection();
+        await createOffer(pc);
     }
 
     const cancel = () => {
 
-        if (peerConnection.current) {
-            peerConnection.current.close();
-            peerConnection.current = null;
+        if (props.peerConnection) {
+            props.peerConnection.close();
+            props.setPeerConnection(null);
         }
-
+        props.setReceiveCall(0)
         setReceiveToggle(0)
         props.setCall(0)
+        props.setOffer(null)
         props.ws.send(JSON.stringify({ type: MessageType.DisConnectCall, to: props.selectedUser.id }))
+
     }
 
     const share = async () => {
@@ -182,10 +184,10 @@ function Call(props) {
         }
 
         localStreamRef.current.getTracks().forEach(track => {
-            peerConnection.current.addTrack(track, localStreamRef.current)
+            props.peerConnection.addTrack(track, localStreamRef.current)
         });
 
-        const sender = peerConnection.current.getSenders().find(
+        const sender = props.peerConnection.getSenders().find(
             (s) => s.track && s.track.kind === "video"
         );
 
@@ -194,7 +196,7 @@ function Call(props) {
             sender.replaceTrack(videoTrack);
         } else {
             // For first-time (e.g. if called before any track was sent)
-            peerConnection.current.addTrack(videoTrack, stream);
+            props.peerConnection.addTrack(videoTrack, stream);
         }
 
     }
@@ -213,10 +215,10 @@ function Call(props) {
 
 
         localStreamRef.current.getTracks().forEach(track => {
-            peerConnection.current.addTrack(track, localStreamRef.current)
+            props.peerConnection.addTrack(track, localStreamRef.current)
         });
 
-        const sender = peerConnection.current.getSenders().find(
+        const sender = props.peerConnection.getSenders().find(
             (s) => s.track && s.track.kind === "video"
         );
 
@@ -225,7 +227,7 @@ function Call(props) {
             sender.replaceTrack(videoTrack);
         } else {
             // For first-time (e.g. if called before any track was sent)
-            peerConnection.current.addTrack(videoTrack, stream);
+            props.peerConnection.addTrack(videoTrack, stream);
         }
 
     }
@@ -234,11 +236,11 @@ function Call(props) {
 
     return <div id="call-video">
         <div className="calling-buttons">
-            {receiveCall === true && <button onClick={() => { call() }}><CallIcon sx={{ fontSize: 40, color: "green" }} /></button>}
-            {receiverToggle === 1 && <button onClick={() => { receiver(); }}><CallReceivedIcon sx={{ fontSize: 40, color: "mediumspringgreen" }} /></button>}
+            {props.receiveCall !==1 && <button onClick={() => { call() }}><CallIcon sx={{ fontSize: 40, color: "green" }} /></button>}
+            {receiverToggle ===1 && <button onClick={() => { receiver(); }}><CallReceivedIcon sx={{ fontSize: 40, color: "mediumspringgreen" }} /></button>}
             <button onClick={() => { cancel() }}><CallEndIcon sx={{ fontSize: 40, color: "red" }} /></button>
-            {receiveCall === 1 && <button onClick={() => { share() }}><ScreenShareIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
-            {receiveCall === 1 && <button onClick={() => { setToggle((prev) => !prev) }}><CameraswitchIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
+            {props.receiveCall === 1 && <button onClick={() => { share() }}><ScreenShareIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
+            {props.receiveCall === 1 && <button onClick={() => { setToggle((prev) => !prev) }}><CameraswitchIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
         </div>
         <div className="calling-video">
             <video src="" autoPlay playsInline id={toggle === false ? "local-video" : "local-video1"} ref={localVideoRef} ></video>
