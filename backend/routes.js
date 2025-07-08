@@ -31,11 +31,11 @@ router.post("/register", async (req, res) => {
         }
 
         //is passsword strong
-        if (!validator.isStrongPassword(password)) {
-            return res
-                .status(400)
-                .json({ message: "Password should be strong" });
-        }
+        // if (!validator.isStrongPassword(password)) {
+        //     return res
+        //         .status(400)
+        //         .json({ message: "Password should be strong" });
+        // }
 
         // is email valid
         if (!validator.isEmail) {
