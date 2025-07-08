@@ -66,7 +66,8 @@ function Chat() {
     const [call, setCall] = useState(0);
     const [offer, setOffer] = useState(null);
     const peerConnectionRef = useRef(null);
-    const [receiveCall, setReceiveCall] =useState(true);
+    const [receiveCall, setReceiveCall] = useState(0);
+    const [callingMessage, setCallingMessage] = useState(0)
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
     const ws = useRef("");
@@ -233,6 +234,8 @@ function Chat() {
         [selectedUser, user],
     );
 
+    
+
     useEffect(() => {
         if (ws.current) return;
 
@@ -240,7 +243,7 @@ function Chat() {
         ws.current = web;
         console.log(ws);
 
-        ws.current.onmessage = async(event) => {
+        ws.current.onmessage = async (event) => {
             const response = JSON.parse(event.data);
 
             console.log(response);
@@ -479,12 +482,13 @@ function Chat() {
                     }
                     break;
                 case MessageType.Offer:
-                    setOffer(response.offer)
+                    setOffer(response.offer);
+                    setCallingMessage(`Calling`);
+                    // console.log(friends)
                     console.log(response.offer)
                     break;
                 case MessageType.IceCandidate:
-                    if(peerConnectionRef.current)
-                    {
+                    if (peerConnectionRef.current) {
                         await peerConnectionRef.current.addIceCandidate(response.candidate);
                     }
                     break;
@@ -497,11 +501,14 @@ function Chat() {
                     break;
 
                 case MessageType.DisConnectCall:
-                    peerConnectionRef.current.close();
-                    peerConnectionRef.current=null;
+                    if (peerConnectionRef.current) {
+                        peerConnectionRef.current.close();
+                        peerConnectionRef.current = null;
+                    }
                     setCall(0);
                     setOffer(null);
                     setReceiveCall(0);
+                    setCallingMessage(0)
                     console.log("Disconnected");
                     break;
 
@@ -511,6 +518,8 @@ function Chat() {
             }
         };
     }, [setFriends, user]);
+
+    
 
     const updateSelectedUser = useCallback(
         (info) => {
@@ -559,9 +568,9 @@ function Chat() {
         [selectedUser],
     );
 
-    const setPeerConnection =useCallback((pc)=>{
-        peerConnectionRef.current= pc
-    })
+    const setPeerConnection = useCallback((pc) => {
+        peerConnectionRef.current = pc
+    }, [])
 
     const sendChatBox = useCallback(
         (value) => {
@@ -731,7 +740,7 @@ function Chat() {
                             <Document
                                 updateDocument={updateShowDocumentBlock}
                                 sendMess={sendMessage}
-                            /> : (call === 1) ? <Call ws={ws.current} selectedUser={selectedUser} offer={offer} setCall={setCall} setOffer={setOffer} setPeerConnection={setPeerConnection} peerConnection={peerConnectionRef.current} receiveCall={receiveCall} setReceiveCall={setReceiveCall}/> : (
+                            /> : (call === 1) ? <Call ws={ws.current} selectedUser={selectedUser} offer={offer} setCall={setCall} setOffer={setOffer} setPeerConnection={setPeerConnection} peerConnection={peerConnectionRef.current} receiveCall={receiveCall} setReceiveCall={setReceiveCall} callingMessage={callingMessage} setCallingMessage={setCallingMessage} /> : (
                                 <div className="chats">
                                     {selectedUser &&
                                         showMessage[selectedUser.id] &&

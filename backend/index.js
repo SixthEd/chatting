@@ -256,7 +256,7 @@ web.on("connection", (socket, request) => {
                     }
                     break;
                 case MessageType.Offer:
-                    senderSocket.send(JSON.stringify({ type: MessageType.Offer, offer: parsedMessage.offer }))
+                    senderSocket.send(JSON.stringify({ type: MessageType.Offer, offer: parsedMessage.offer, to:parsedMessage.to }))
                     console.log("offer")
                     break;
                 case MessageType.Answer:

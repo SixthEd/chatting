@@ -978,3 +978,14 @@ canvas {
     position: absolute;
     z-index: -1;
 }
+
+.calling-to {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    font-size: 5rem;
+    height: 90%;
+    align-items: center;
+    color: white
+
+}

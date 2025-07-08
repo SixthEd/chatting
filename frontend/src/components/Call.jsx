@@ -16,7 +16,7 @@ function Call(props) {
     const remoteVideoRef = useRef(null);
     const offerRef = useState(null);
     const answerRef = useRef(null);
-    const [receiveCall, setReceiveCall] = useState(true);
+    // const [receiveCall, setReceiveCall] = useState(true);
     const [receiverToggle, setReceiveToggle] = useState(0);
     const [toggle, setToggle] = useState(false);
     const currentPeerRef = useRef(null);
@@ -104,7 +104,7 @@ function Call(props) {
         return pc;
 
 
-        
+
     }
 
 
@@ -150,6 +150,8 @@ function Call(props) {
 
         const pc = await createPeerConnection();
         await createOffer(pc);
+        props.setCallingMessage(1)
+
     }
 
     const cancel = () => {
@@ -160,6 +162,7 @@ function Call(props) {
         }
         props.setReceiveCall(0)
         setReceiveToggle(0)
+        props.setCallingMessage(0)
         props.setCall(0)
         props.setOffer(null)
         props.ws.send(JSON.stringify({ type: MessageType.DisConnectCall, to: props.selectedUser.id }))
@@ -235,9 +238,11 @@ function Call(props) {
 
 
     return <div id="call-video">
+        <div className="calling-to">{props.receiveCall !== 1 && (props.callingMessage===0?<p> Call {props.selectedUser.name}?</p>:props.callingMessage===1?<p>Calling {props.selectedUser.name}</p>:<p>{props.selectedUser.name} is Calling</p>)}</div>
+
         <div className="calling-buttons">
-            {props.receiveCall !==1 && <button onClick={() => { call() }}><CallIcon sx={{ fontSize: 40, color: "green" }} /></button>}
-            {receiverToggle ===1 && <button onClick={() => { receiver(); }}><CallReceivedIcon sx={{ fontSize: 40, color: "mediumspringgreen" }} /></button>}
+            {props.receiveCall !== 1 && <button onClick={() => { call() }}><CallIcon sx={{ fontSize: 40, color: "green" }} /></button>}
+            {receiverToggle === 1 && <button onClick={() => { receiver(); }}><CallReceivedIcon sx={{ fontSize: 40, color: "mediumspringgreen" }} /></button>}
             <button onClick={() => { cancel() }}><CallEndIcon sx={{ fontSize: 40, color: "red" }} /></button>
             {props.receiveCall === 1 && <button onClick={() => { share() }}><ScreenShareIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
             {props.receiveCall === 1 && <button onClick={() => { setToggle((prev) => !prev) }}><CameraswitchIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
