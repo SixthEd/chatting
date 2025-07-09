@@ -137,7 +137,7 @@ web.on("connection", (socket, request) => {
         }),
     );
 
-    Object.entries(userSockets).forEach(([id, client]) => {
+    Object.entries(userSockets).forEach(([to, client]) => {
         if (client !== socket && client.readyState === socket.OPEN) {
             client.send(
                 JSON.stringify({
@@ -149,11 +149,11 @@ web.on("connection", (socket, request) => {
     });
 
     socket.on("close", () => {
-        Object.entries(userSockets).forEach(([id, client]) => {
+        Object.entries(userSockets).forEach(([to, client]) => {
             if (client !== socket && client.readyState === socket.OPEN) {
                 client.send(
                     JSON.stringify({
-                        type: MessageType.UserDisconnected,
+                        type: MessageType.UserDisconnected, 
                         id,
                     }),
                 );
@@ -256,7 +256,7 @@ web.on("connection", (socket, request) => {
                     }
                     break;
                 case MessageType.Offer:
-                    senderSocket.send(JSON.stringify({ type: MessageType.Offer, offer: parsedMessage.offer, to:parsedMessage.to }))
+                    senderSocket.send(JSON.stringify({ type: MessageType.Offer, offer: parsedMessage.offer, to:parsedMessage.to, from: parsedMessage.from }))
                     console.log("offer")
                     break;
                 case MessageType.Answer:

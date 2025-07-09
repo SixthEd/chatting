@@ -137,7 +137,7 @@ function Call(props) {
     const createOffer = async (pc) => {
         offerRef.current = await pc.createOffer();
         pc.setLocalDescription(offerRef.current);
-        props.ws.send(JSON.stringify({ type: MessageType.Offer, offer: offerRef.current, to: props.selectedUser.id }))
+        props.ws.send(JSON.stringify({ type: MessageType.Offer, offer: offerRef.current, to: props.selectedUser.id , from:  props.user.id}))
     }
 
     const call = async () => {
@@ -150,7 +150,7 @@ function Call(props) {
 
         const pc = await createPeerConnection();
         await createOffer(pc);
-        props.setCallingMessage(1)
+        props.setCallStatus(1)
 
     }
 
@@ -162,7 +162,7 @@ function Call(props) {
         }
         props.setReceiveCall(0)
         setReceiveToggle(0)
-        props.setCallingMessage(0)
+        props.setCallStatus(0)
         props.setCall(0)
         props.setOffer(null)
         props.ws.send(JSON.stringify({ type: MessageType.DisConnectCall, to: props.selectedUser.id }))
@@ -238,7 +238,7 @@ function Call(props) {
 
 
     return <div id="call-video">
-        <div className="calling-to">{props.receiveCall !== 1 && (props.callingMessage===0?<p> Call {props.selectedUser.name}?</p>:props.callingMessage===1?<p>Calling {props.selectedUser.name}</p>:<p>{props.selectedUser.name} is Calling</p>)}</div>
+        <div className="calling-to">{props.receiveCall !== 1 && (props.callStatus===0?<p> Call {props.selectedUser.name}?</p>:props.callStatus===1?<p>Calling {props.selectedUser.name}</p>:<p>{props.callingMessage}</p>)}</div>
 
         <div className="calling-buttons">
             {props.receiveCall !== 1 && <button onClick={() => { call() }}><CallIcon sx={{ fontSize: 40, color: "green" }} /></button>}

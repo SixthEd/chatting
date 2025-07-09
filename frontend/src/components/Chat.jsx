@@ -16,16 +16,20 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import File from "./File";
 import VideoFileIcon from "@mui/icons-material/VideoFile";
 import AudiotrackIcon from "@mui/icons-material/Audiotrack";
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import AddAPhotoRoundedIcon from '@mui/icons-material/AddAPhotoRounded';
-import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import AddAPhotoRoundedIcon from "@mui/icons-material/AddAPhotoRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 // import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
-import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded';
-import CallRoundedIcon from '@mui/icons-material/CallRounded';
+import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
+import CallRoundedIcon from "@mui/icons-material/CallRounded";
 import Video from "./Video";
 import Audio from "./Audio";
 import Document from "./Document";
 import Call from "./Call";
+import MyWebsocket from "../websocket";
+import CallIcon from '@mui/icons-material/Call';
+import CallEndIcon from '@mui/icons-material/CallEnd';
+
 
 const MessageType = {
     UserConnected: 1,
@@ -44,7 +48,7 @@ const MessageType = {
     Offer: 14,
     Answer: 15,
     IceCandidate: 16,
-    DisConnectCall: 17
+    DisConnectCall: 17,
 };
 
 let images = [];
@@ -67,14 +71,52 @@ function Chat() {
     const [offer, setOffer] = useState(null);
     const peerConnectionRef = useRef(null);
     const [receiveCall, setReceiveCall] = useState(0);
-    const [callingMessage, setCallingMessage] = useState(0)
+    const [callStatus, setCallStatus] = useState(0);
+    const [caller, setCaller] = useState(null);
+    const [callingMessage, setCallingMessage] = useState(null);
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
-    const ws = useRef("");
+
+    const myWebsocket = useRef("");
+
+    const sendChatBox = useCallback(
+        (value) => {
+            value = {
+                from: user.id,
+                to: selectedUser.id,
+                message: value.message,
+                send_at: value.send_at,
+                date: value.date,
+                image: value.image,
+                video: value.video,
+                audio: value.audio,
+                doc: value.doc,
+                docName: value.docName,
+            };
+            setShowMessage((prevValue) => {
+                console.log("user", user);
+                if (prevValue[selectedUser.id]) {
+                    return {
+                        ...prevValue,
+                        [selectedUser.id]: [
+                            ...prevValue[selectedUser.id],
+                            value,
+                        ],
+                    };
+                }
+
+                return {
+                    ...prevValue,
+                    [selectedUser.id]: [value],
+                };
+            });
+        },
+        [selectedUser, user],
+    );
 
     const sendMessage = useCallback(
         (message) => {
-            if (!ws.current) {
+            if (!myWebsocket.current) {
                 return;
             }
             if (!selectedUser) {
@@ -90,7 +132,7 @@ function Chat() {
             let doc = "";
             let docName = "";
 
-            const messageType = message.type
+            const messageType = message.type;
 
             switch (messageType) {
                 case "imgCaption":
@@ -126,8 +168,7 @@ function Chat() {
                     console.log(message.caption);
                     if (message.caption) {
                         message = message.caption;
-                    }
-                    else {
+                    } else {
                         message = "";
                     }
                     break;
@@ -145,13 +186,22 @@ function Chat() {
             const date = dateTime.toISOString().split("T")[0];
             console.log(date);
             const send_at = `${hours}:${minutes}`;
-            sendChatBox({ message, send_at, date, image, video, audio, doc, docName });
+            sendChatBox({
+                message,
+                send_at,
+                date,
+                image,
+                video,
+                audio,
+                doc,
+                docName,
+            });
 
             const value = message;
-            console.log(messageType)
+            console.log(messageType);
             switch (messageType) {
                 case "imgCaption":
-                    ws.current.send(
+                    myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
                             from: user.id,
@@ -159,12 +209,12 @@ function Chat() {
                             send_at,
                             date,
                             image,
-                            type: MessageType.ReceivedImage
+                            type: MessageType.ReceivedImage,
                         }),
                     );
                     break;
                 case "vCaption":
-                    ws.current.send(
+                    myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
                             from: user.id,
@@ -172,12 +222,12 @@ function Chat() {
                             send_at,
                             date,
                             video,
-                            type: MessageType.ReceivedVideo
+                            type: MessageType.ReceivedVideo,
                         }),
                     );
                     break;
                 case "audioCaption":
-                    ws.current.send(
+                    myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
                             from: user.id,
@@ -185,12 +235,12 @@ function Chat() {
                             send_at,
                             date,
                             audio,
-                            type: MessageType.ReceivedAudio
+                            type: MessageType.ReceivedAudio,
                         }),
                     );
                     break;
                 case "documentCaption":
-                    ws.current.send(
+                    myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
                             from: user.id,
@@ -199,22 +249,21 @@ function Chat() {
                             date,
                             doc,
                             docName,
-                            type: MessageType.ReceivedDoc
+                            type: MessageType.ReceivedDoc,
                         }),
                     );
                     break;
                 default:
-                    ws.current.send(
+                    myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
                             from: user.id,
                             message,
                             send_at,
                             date,
-                            type: MessageType.ReceivedMessage
+                            type: MessageType.ReceivedMessage,
                         }),
                     );
-
             }
 
             axioInst
@@ -229,21 +278,13 @@ function Chat() {
                 .catch((err) => {
                     return;
                 });
-            setMessage("")
+            setMessage("");
         },
-        [selectedUser, user],
+        [selectedUser, sendChatBox, user],
     );
 
-    
-
-    useEffect(() => {
-        if (ws.current) return;
-
-        const web = new WebSocket(`${url}?id=${user.id}`);
-        ws.current = web;
-        console.log(ws);
-
-        ws.current.onmessage = async (event) => {
+    const onMessageHandler = useCallback(
+        async (event) => {
             const response = JSON.parse(event.data);
 
             console.log(response);
@@ -252,7 +293,7 @@ function Chat() {
                 case MessageType.UserConnected: {
                     setFriends((old) => {
                         return old.map((f) =>
-                            f.id == response.id
+                            f.id === Number(response.id)
                                 ? { ...f, status: "online" }
                                 : f,
                         );
@@ -263,7 +304,7 @@ function Chat() {
                 case MessageType.UserDisconnected: {
                     setFriends((old) => {
                         return old.map((f) =>
-                            f.id == response.id
+                            f.id === Number(response.id)
                                 ? { ...f, status: "offline" }
                                 : f,
                         );
@@ -275,7 +316,7 @@ function Chat() {
                     setFriends((old) => {
                         return old.map((oldFriend) =>
                             response.connectedUsers.find(
-                                (connUser) => connUser == oldFriend.id,
+                                (connUser) => parseInt(connUser) === parseInt(oldFriend.id),
                             )
                                 ? { ...oldFriend, status: "online" }
                                 : oldFriend,
@@ -324,14 +365,14 @@ function Chat() {
                     images[response.partNumber] = response.chunk;
                     if (response.partNumber === response.totalChunks - 1) {
                         const fullImage = images.join("");
-                        console.log("fullImage")
+                        console.log("fullImage");
                         const value = {
                             from: response.from,
                             to: response.to,
                             message: response.message,
                             send_at: response.send_at,
                             date: response.date,
-                            image: fullImage
+                            image: fullImage,
                         };
                         images = [];
                         setShowMessage((prevValue) => {
@@ -364,14 +405,14 @@ function Chat() {
                     videos[response.partNumber] = response.chunk;
                     if (response.partNumber === response.totalChunks - 1) {
                         const videoImage = videos.join("");
-                        console.log("fullImage")
+                        console.log("fullImage");
                         const value = {
                             from: response.from,
                             to: response.to,
                             message: response.message,
                             send_at: response.send_at,
                             date: response.date,
-                            video: videoImage
+                            video: videoImage,
                         };
                         videos = [];
                         setShowMessage((prevValue) => {
@@ -404,14 +445,14 @@ function Chat() {
                     audios[response.partNumber] = response.chunk;
                     if (response.partNumber === response.totalChunks - 1) {
                         const audioImage = audios.join("");
-                        console.log("fullImage")
+                        console.log("fullImage");
                         const value = {
                             from: response.from,
                             to: response.to,
                             message: response.message,
                             send_at: response.send_at,
                             date: response.date,
-                            audio: audioImage
+                            audio: audioImage,
                         };
                         audios = [];
                         setShowMessage((prevValue) => {
@@ -444,7 +485,7 @@ function Chat() {
                     docs[response.partNumber] = response.chunk;
                     if (response.partNumber === response.totalChunks - 1) {
                         const docImage = docs.join("");
-                        console.log("fullImage")
+                        console.log("fullImage");
                         const value = {
                             from: response.from,
                             to: response.to,
@@ -452,7 +493,7 @@ function Chat() {
                             send_at: response.send_at,
                             date: response.date,
                             doc: docImage,
-                            docName: response.docName
+                            docName: response.docName,
                         };
                         audios = [];
                         setShowMessage((prevValue) => {
@@ -483,19 +524,30 @@ function Chat() {
                     break;
                 case MessageType.Offer:
                     setOffer(response.offer);
-                    setCallingMessage(`Calling`);
-                    // console.log(friends)
-                    console.log(response.offer)
+                    console.log(friends)
+                    const friend = friends.filter((f) => f.id === response.from);
+                    setCallStatus(2);
+                    setCaller(friend[0])
+                    setCallingMessage(`${friend[0].name} is Calling`);
+                    console.log("response.offer", response.offer);
                     break;
                 case MessageType.IceCandidate:
                     if (peerConnectionRef.current) {
-                        await peerConnectionRef.current.addIceCandidate(response.candidate);
+                        await peerConnectionRef.current.addIceCandidate(
+                            response.candidate,
+                        );
                     }
                     break;
 
                 case MessageType.Answer:
-                    if (peerConnectionRef.current && peerConnectionRef.current.signalingState === "have-local-offer") {
-                        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(response.answer));
+                    if (
+                        peerConnectionRef.current &&
+                        peerConnectionRef.current.signalingState ===
+                        "have-local-offer"
+                    ) {
+                        await peerConnectionRef.current.setRemoteDescription(
+                            new RTCSessionDescription(response.answer),
+                        );
                     }
                     setReceiveCall(1);
                     break;
@@ -508,18 +560,35 @@ function Chat() {
                     setCall(0);
                     setOffer(null);
                     setReceiveCall(0);
-                    setCallingMessage(0)
+                    setCaller(null);
+                    setCallStatus(0);
                     console.log("Disconnected");
                     break;
-
 
                 default:
                     break;
             }
-        };
-    }, [setFriends, user]);
+        },
+        [friends, setFriends, user],
+    );
 
-    
+    useEffect(() => {
+        if (!myWebsocket.current) return;
+
+        myWebsocket.current.newMessageHandler(onMessageHandler);
+    }, [onMessageHandler])
+
+    useEffect(() => {
+        if (myWebsocket.current) return;
+
+        const mySocket = new MyWebsocket(onMessageHandler);
+        mySocket.new(`${url}?id=${user.id}`);
+        myWebsocket.current = mySocket;
+
+        console.log(myWebsocket);
+
+        // onMessageHandler(myWebsocket, friends);
+    }, [friends, onMessageHandler, user.id]);
 
     const updateSelectedUser = useCallback(
         (info) => {
@@ -569,43 +638,8 @@ function Chat() {
     );
 
     const setPeerConnection = useCallback((pc) => {
-        peerConnectionRef.current = pc
-    }, [])
-
-    const sendChatBox = useCallback(
-        (value) => {
-            value = {
-                from: user.id,
-                to: selectedUser.id,
-                message: value.message,
-                send_at: value.send_at,
-                date: value.date,
-                image: value.image,
-                video: value.video,
-                audio: value.audio,
-                doc: value.doc,
-                docName: value.docName,
-            };
-            setShowMessage((prevValue) => {
-                console.log("user", user);
-                if (prevValue[selectedUser.id]) {
-                    return {
-                        ...prevValue,
-                        [selectedUser.id]: [
-                            ...prevValue[selectedUser.id],
-                            value,
-                        ],
-                    };
-                }
-
-                return {
-                    ...prevValue,
-                    [selectedUser.id]: [value],
-                };
-            });
-        },
-        [selectedUser, user],
-    );
+        peerConnectionRef.current = pc;
+    }, []);
 
     const updateShowFileBlock = useCallback((info) => {
         setBlock(0);
@@ -625,7 +659,7 @@ function Chat() {
     const updateShowDocumentBlock = useCallback(() => {
         setBlock(0);
         setShowDocumentBlock(0);
-    }, [])
+    }, []);
 
     useEffect(() => {
         console.log(block);
@@ -633,6 +667,20 @@ function Chat() {
 
     return (
         <div className="chat">
+            {callStatus === 2 && <div className="call-from">
+                <p>{callingMessage}</p>
+                <button onClick={() => { updateSelectedUser(caller); setCall(1) }}>
+                    <CallIcon sx={{ fontSize: 20, color: "green" }} />
+                </button>
+                <button onClick={() => {
+                    myWebsocket.current.send(JSON.stringify({ type: MessageType.DisConnectCall, to: caller.id }));
+                    setCall(0);
+                    setCallStatus(0);
+                }}>
+                    <CallEndIcon sx={{ fontSize: 20, color: "red" }} />
+
+                </button>
+            </div>}
             <div className="friendblock">
                 <div className="friends">
                     {friends.map((f, i) => {
@@ -671,7 +719,7 @@ function Chat() {
                                                     (showMessage[f.id][
                                                         showMessage[f.id]
                                                             .length - 1
-                                                    ].from == user.id
+                                                    ].from === user.id
                                                         ? "You: "
                                                         : " ") +
                                                     (showMessage[f.id] &&
@@ -716,8 +764,12 @@ function Chat() {
                                     <img src="profile.webp" alt="" />
                                 </div>
                                 <div className="connecting-uleft">
-                                    <div>{selectedUser && `${selectedUser.name}`}</div>
-                                    <div onClick={() => setCall(1)}><CallRoundedIcon /></div>
+                                    <div>
+                                        {selectedUser && `${selectedUser.name}`}
+                                    </div>
+                                    <div onClick={() => setCall(1)}>
+                                        <CallRoundedIcon />
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -736,50 +788,71 @@ function Chat() {
                                 updateVideo={updateShowVideoBlock}
                                 sendMess={sendMessage}
                             />
-                        ) : showDocumentBlock === 1 ?
+                        ) : showDocumentBlock === 1 ? (
                             <Document
                                 updateDocument={updateShowDocumentBlock}
                                 sendMess={sendMessage}
-                            /> : (call === 1) ? <Call ws={ws.current} selectedUser={selectedUser} offer={offer} setCall={setCall} setOffer={setOffer} setPeerConnection={setPeerConnection} peerConnection={peerConnectionRef.current} receiveCall={receiveCall} setReceiveCall={setReceiveCall} callingMessage={callingMessage} setCallingMessage={setCallingMessage} /> : (
-                                <div className="chats">
-                                    {selectedUser &&
-                                        showMessage[selectedUser.id] &&
-                                        showMessage[selectedUser.id].map(
-                                            (f, index) => {
-                                                return (
-                                                    <div className="message-date" key={index}>
-                                                        <div className="date">
-                                                            {index - 1 > 0 &&
-                                                                showMessage[
-                                                                    selectedUser.id
-                                                                ][index - 1].date <
-                                                                f.date &&
-                                                                f.date}
-                                                        </div>
-
-                                                        <div
-                                                            className={
-                                                                f.from === user.id
-                                                                    ? "send"
-                                                                    : "received"
-                                                            }
-                                                        >
-                                                            <Message
-                                                                text={f.message}
-                                                                time={f.send_at}
-                                                                img={f.image}
-                                                                vid={f.video}
-                                                                aud={f.audio}
-                                                                doc={f.doc}
-                                                                docName={f.docName}
-                                                            />
-                                                        </div>
+                            />
+                        ) : call === 1 ? (
+                            <Call
+                                ws={myWebsocket.current.ws}
+                                selectedUser={selectedUser}
+                                user={user}
+                                offer={offer}
+                                setCall={setCall}
+                                setOffer={setOffer}
+                                setPeerConnection={setPeerConnection}
+                                peerConnection={peerConnectionRef.current}
+                                receiveCall={receiveCall}
+                                setReceiveCall={setReceiveCall}
+                                callingMessage={callingMessage}
+                                callStatus={callStatus}
+                                setCallStatus={setCallStatus}
+                                setCallingMessage={setCallingMessage}
+                            />
+                        ) : (
+                            <div className="chats">
+                                {selectedUser &&
+                                    showMessage[selectedUser.id] &&
+                                    showMessage[selectedUser.id].map(
+                                        (f, index) => {
+                                            return (
+                                                <div
+                                                    className="message-date"
+                                                    key={index}
+                                                >
+                                                    <div className="date">
+                                                        {index - 1 > 0 &&
+                                                            showMessage[
+                                                                selectedUser.id
+                                                            ][index - 1].date <
+                                                            f.date &&
+                                                            f.date}
                                                     </div>
-                                                );
-                                            },
-                                        )}
-                                </div>
-                            )}
+
+                                                    <div
+                                                        className={
+                                                            f.from === user.id
+                                                                ? "send"
+                                                                : "received"
+                                                        }
+                                                    >
+                                                        <Message
+                                                            text={f.message}
+                                                            time={f.send_at}
+                                                            img={f.image}
+                                                            vid={f.video}
+                                                            aud={f.audio}
+                                                            doc={f.doc}
+                                                            docName={f.docName}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        },
+                                    )}
+                            </div>
+                        )}
                     </div>
                     {showFileBlock === 0 &&
                         showAudioBlock === 0 &&
@@ -789,17 +862,34 @@ function Chat() {
                                     <button>
                                         <EmojiEmotionsIcon />
                                     </button>
-                                    {showMenu === 1 ? <button onClick={() => { setShowMenu(0) }}><CloseRoundedIcon /></button> : <button onClick={() => { setShowMenu(1) }}><AddRoundedIcon /></button>}
-                                    {showMenu === 1 &&
+                                    {showMenu === 1 ? (
+                                        <button
+                                            onClick={() => {
+                                                setShowMenu(0);
+                                            }}
+                                        >
+                                            <CloseRoundedIcon />
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                setShowMenu(1);
+                                            }}
+                                        >
+                                            <AddRoundedIcon />
+                                        </button>
+                                    )}
+                                    {showMenu === 1 && (
                                         <div className="drop-down">
                                             <div className="drop-block">
-
                                                 <button
                                                     onClick={() => {
                                                         setShowVideoBlock(1);
                                                     }}
                                                 >
-                                                    <div><VideoFileIcon /></div>
+                                                    <div>
+                                                        <VideoFileIcon />
+                                                    </div>
                                                     <div>Video</div>
                                                 </button>
                                                 <button
@@ -807,7 +897,9 @@ function Chat() {
                                                         setShowAudioBlock(1);
                                                     }}
                                                 >
-                                                    <div><AudiotrackIcon /></div>
+                                                    <div>
+                                                        <AudiotrackIcon />
+                                                    </div>
                                                     <div>Audio</div>
                                                 </button>
                                                 <button
@@ -815,16 +907,24 @@ function Chat() {
                                                         setShowFileBlock(1);
                                                     }}
                                                 >
-                                                    <div><AddAPhotoRoundedIcon /></div>
+                                                    <div>
+                                                        <AddAPhotoRoundedIcon />
+                                                    </div>
                                                     <div>Photo</div>
                                                 </button>
-                                                <button onClick={() => { setShowDocumentBlock(1) }}>
-                                                    <div><AttachFileRoundedIcon /></div>
+                                                <button
+                                                    onClick={() => {
+                                                        setShowDocumentBlock(1);
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <AttachFileRoundedIcon />
+                                                    </div>
                                                     <div>Document</div>
                                                 </button>
                                             </div>
                                         </div>
-                                    }
+                                    )}
                                 </div>
                                 <form action="">
                                     <input
