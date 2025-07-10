@@ -1,20 +1,19 @@
 import React, { useContext } from "react";
 import { useState } from "react";
 import { useCallback } from "react";
-import Room from "./Room";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 
 function ClassRoom() {
 
     const [password, setPassword] = useState(null);
-    const { setClassRoomPassword, classRoomPassword, role, setRole} = useContext(AuthContext);
+    const { setClassRoomPassword, setRole} = useContext(AuthContext);
     const navigate = useNavigate();
 
     const goTo = useCallback((password) => {
         setClassRoomPassword(password)
         navigate(`/room?password=${password}`)
-    }, [])
+    }, [navigate, setClassRoomPassword])
 
 
     const passwordGenerate = useCallback(() => {
@@ -22,7 +21,7 @@ function ClassRoom() {
         var randomPassword = Math.random().toString(32).slice(2);
         setRole("creator")
         goTo(randomPassword)
-    }, [])
+    }, [goTo, setRole])
 
     return <div className="classRoom">
         <div className="classRoom-container">

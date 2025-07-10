@@ -29,6 +29,9 @@ import Call from "./Call";
 import MyWebsocket from "../websocket";
 import CallIcon from '@mui/icons-material/Call';
 import CallEndIcon from '@mui/icons-material/CallEnd';
+import { emojis } from "../emojis.js";
+
+
 
 
 const MessageType = {
@@ -859,9 +862,14 @@ function Chat() {
                         showVideoBlock === 0 && (
                             <div className="sendmessage">
                                 <div className="emj-file">
-                                    <button>
-                                        <EmojiEmotionsIcon />
-                                    </button>
+                                    <div className="emoji-wrapper">
+                                        <div className="emojies">{emojis.map((emoji,i)=>{
+                                            return <button key={i} onClick={()=>{setMessage(m=>m+emoji)}}>{emoji}</button>
+                                        })}</div>
+                                        <button className="emoji-icon">
+                                            <EmojiEmotionsIcon />
+                                        </button>
+                                    </div>
                                     {showMenu === 1 ? (
                                         <button
                                             onClick={() => {

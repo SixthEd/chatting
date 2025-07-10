@@ -34,7 +34,7 @@ function Room(props) {
     const [messageList, setMessageList] = useState([]);
     const url = `ws://localhost:4000/wsroom`;
     const [clock, setClock] = useState(30);
-    const myInterval = useRef(null);
+    // const myInterval = useRef(null);
     const [randomWord, setRandomWord] = useState(null);
     const [winner, setWinner] = useState(null)
     const [winnerMessage, setWinnerMessage] = useState(null);
@@ -151,6 +151,8 @@ function Room(props) {
                     clearBoard()
 
                     break;
+                default:
+                    break;
 
             }
             // if (parsedMessage.type === roomMessageType.ReceivedMessage) {
@@ -232,7 +234,7 @@ function Room(props) {
     }
 
     const sendCanvasPositions = (position) => {
-        const user = JSON.parse(localStorage.getItem("user"));
+        // const user = JSON.parse(localStorage.getItem("user"));
         ws.current.send(JSON.stringify(position))
     }
 
