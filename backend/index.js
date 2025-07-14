@@ -219,7 +219,7 @@ web.on("connection", (socket, request) => {
                             date: parsedMessage.date,
                         }))
                     }
-
+                    break;
                 case MessageType.ReceivedAudio:
                     console.log("audiosending")
                     base64Data = parsedMessage.audio;

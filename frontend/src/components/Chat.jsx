@@ -634,7 +634,7 @@ function Chat() {
             axioInst
                 .post("/chat", { user, info })
                 .then((res) => {
-                    console.log(res.data, info);
+                    console.log("line 637 :",res.data, info);
                     setShowMessage((old) => {
                         if (old[info.id]) {
                             return {
@@ -774,8 +774,8 @@ function Chat() {
                         <input type="text" name="" id="" placeholder="Search" onChange={(event) => { getAllUsers(event.target.value) }} />
                         {getAllUsers &&
                             <div className="request-search-ls">
-                                {allUsers?.map(user => {
-                                    return <div className="list"><div className="flist"><img src="profile.webp" alt="" />{user.name}</div>
+                                {allUsers?.map((user,i) => {
+                                    return <div className="list" key={i}><div className="flist"><img src="profile.webp" alt="" />{user.name}</div>
                                         <button onClick={() => { sendRequest(user.id) }}>Send Request</button></div>
                                 })}
                             </div>}
@@ -788,8 +788,8 @@ function Chat() {
                     <div className="inside-container">
                         {confirmRequest &&
                             <div className="request-search-ls">
-                                {confirmRequest?.map(user => {
-                                    return <div className="list"><div className="flist"><img src="profile.webp" alt="" />{user.name}</div> <button onClick={() => { addFriend(user.id, user.name, user.email); }}>Confirm Request</button></div>
+                                {confirmRequest?.map((user,i) => {
+                                    return <div className="list" key={i}><div className="flist"><img src="profile.webp" alt="" />{user.name}</div> <button onClick={() => { addFriend(user.id, user.name, user.email); }}>Confirm Request</button></div>
                                 })}
                             </div>}
                     </div>

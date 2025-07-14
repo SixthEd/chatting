@@ -398,7 +398,7 @@ button:hover {
 }
 
 .message-date {
-    height: 10vh;
+    height: fit-content;
     margin: 0 10px
 }
 

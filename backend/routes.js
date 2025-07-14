@@ -167,13 +167,12 @@ where user_id = $1;`,
 
 router.put("/updatechat", async (req, res) => {
 
-    // console.log(req.body);
-    // const {user, friend , message} = req.body;
-    // console.log("updatechat", user, friend, message);
-    // if(message && friend)
-    // {
-    //     const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date) VALUES($1, $2, $3, now(),now()::date)`,[user.id, friend.id, message]);
-    // }
+    console.log("Line 170:", req.body);
+    const { user, friend, message } = req.body;
+    console.log("line 172:",req.body);
+    if (user.id && message.from) {
+        const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date,image,video,audio) VALUES($1, $2, $3, now(),now()::date,$4,$5,$6)`, [message.from, user.id, message.message, message.image, message.video, message.audio]);
+    }
     res.json("");
 });
 
@@ -181,7 +180,7 @@ router.post("/chat", async (req, res) => {
     const { user, info } = req.body;
     console.log(user.id, info.id);
     const response = await db.query(
-        `SELECT "from", "to" , message, TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `, [user.id, info.id]
+        `SELECT "from", "to" , message, image, video, audio ,TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `, [user.id, info.id]
     );
     console.log("chat rows", response.rows);
     if (response.rows.length > 0) {
@@ -199,49 +198,49 @@ router.post("/chat", async (req, res) => {
     ]);
 });
 
-router.get("/getAllUsers",async(req, res)=>{
+router.get("/getAllUsers", async (req, res) => {
     const value = req.query.value;
-    const response = await db.query(`Select id, name, email from users where name ILIKE $1`,[`${value}%`]);
-    console.log("line 204: ",response.rows)
+    const response = await db.query(`Select id, name, email from users where name ILIKE $1`, [`${value}%`]);
+    console.log("line 204: ", response.rows)
     res.status(200).json(response.rows);
 })
 
-router.post("/sendRequest", async(req, res)=>{
-    const {userId, requestId} =  req.body;
-    await db.query("Insert into frequest (user_id, request_id) Values ($1, $2)",[userId, requestId])
+router.post("/sendRequest", async (req, res) => {
+    const { userId, requestId } = req.body;
+    await db.query("Insert into frequest (user_id, request_id) Values ($1, $2)", [userId, requestId])
     res.json(200);
 })
 
-router.get("/getRequest", async(req, res)=>{
-    const userId =req.query.userId;
-    console.log("Line 217",req.query)
-    const response = await db.query("Select request_id from frequest where user_id=$1",[userId])
+router.get("/getRequest", async (req, res) => {
+    const userId = req.query.userId;
+    console.log("Line 217", req.query)
+    const response = await db.query("Select request_id from frequest where user_id=$1", [userId])
     res.status(200).json(response.rows)
 })
 
-router.get("/getAllConfirmRequest", async(req, res)=>{
-    const user_id=req.query.userid;
+router.get("/getAllConfirmRequest", async (req, res) => {
+    const user_id = req.query.userid;
     console.log(user_id)
-    const response = await db.query(`Select u1.id, u1.name, u1.email from frequest f JOIN users u1 ON f.user_id=u1.id where f.request_id=$1`,[user_id]);
+    const response = await db.query(`Select u1.id, u1.name, u1.email from frequest f JOIN users u1 ON f.user_id=u1.id where f.request_id=$1`, [user_id]);
     // console.log(response.rows)
     res.status(200).json(response.rows)
 })
 
-router.delete("/deleteConfirmRequest", async(req, res)=>{
-    const {userId, requestId} = req.query
-    console.log("Line 231:",userId, requestId )
+router.delete("/deleteConfirmRequest", async (req, res) => {
+    const { userId, requestId } = req.query
+    console.log("Line 231:", userId, requestId)
 
-    await db.query(`Delete from frequest where user_id=$1 and request_id=$2`,[userId, requestId]);
+    await db.query(`Delete from frequest where user_id=$1 and request_id=$2`, [userId, requestId]);
     res.status(200);
 })
 
-router.post("/addfriend",async(req, res)=>{
-    const {user_id, friend_id} =req.body;
-    console.log("line 232",user_id, friend_id)
-    await db.query("Insert into userfriends (user_id, friend_id) Values ($1, $2)",[user_id, friend_id])
-    await db.query("Insert into userfriends (user_id, friend_id) Values ($1, $2)",[friend_id,user_id ])
+router.post("/addfriend", async (req, res) => {
+    const { user_id, friend_id } = req.body;
+    console.log("line 232", user_id, friend_id)
+    await db.query("Insert into userfriends (user_id, friend_id) Values ($1, $2)", [user_id, friend_id])
+    await db.query("Insert into userfriends (user_id, friend_id) Values ($1, $2)", [friend_id, user_id])
 
-    res.status(200).json({message: "added"})
+    res.status(200).json({ message: "added" })
 })
 
 function verifyRefreshToken(req, res, next) {
