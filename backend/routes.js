@@ -171,7 +171,7 @@ router.put("/updatechat", async (req, res) => {
     const { user, friend, message } = req.body;
     console.log("line 172:",req.body);
     if (user.id && message.from) {
-        const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date,image,video,audio) VALUES($1, $2, $3, now(),now()::date,$4,$5,$6)`, [message.from, user.id, message.message, message.image, message.video, message.audio]);
+        const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date,image,video,audio, doc, docname) VALUES($1, $2, $3, now(),now()::date,$4,$5,$6, $7, $8)`, [message.from, user.id, message.message, message.image, message.video, message.audio, message.doc, message.docName]);
     }
     res.json("");
 });
@@ -180,7 +180,7 @@ router.post("/chat", async (req, res) => {
     const { user, info } = req.body;
     console.log(user.id, info.id);
     const response = await db.query(
-        `SELECT "from", "to" , message, image, video, audio ,TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `, [user.id, info.id]
+        `SELECT "from", "to" , message, image, video, audio, doc, docname AS "docName" ,TO_CHAR(send_at,'HH24:MI') AS send_at, To_CHAR(date,'YYYY-MM-DD') AS date FROM userchat WHERE ("from" = $1 AND "to" = $2) OR ("from" = $2 AND "to" = $1) order by date, send_at `, [user.id, info.id]
     );
     console.log("chat rows", response.rows);
     if (response.rows.length > 0) {
