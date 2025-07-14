@@ -47,8 +47,10 @@ const MessageType = {
     ReceivedDocChunk: 13,
     Offer: 14,
     Answer: 15,
-    IceCandidate:16,
-    DisConnectCall: 17
+    IceCandidate: 16,
+    DisConnectCall: 17,
+    ConfirmRequest: 18,
+    ReceivedRequest: 19
 };
 
 let base64Data;
@@ -153,7 +155,7 @@ web.on("connection", (socket, request) => {
             if (client !== socket && client.readyState === socket.OPEN) {
                 client.send(
                     JSON.stringify({
-                        type: MessageType.UserDisconnected, 
+                        type: MessageType.UserDisconnected,
                         id,
                     }),
                 );
@@ -256,17 +258,26 @@ web.on("connection", (socket, request) => {
                     }
                     break;
                 case MessageType.Offer:
-                    senderSocket.send(JSON.stringify({ type: MessageType.Offer, offer: parsedMessage.offer, to:parsedMessage.to, from: parsedMessage.from }))
+                    senderSocket.send(JSON.stringify({ type: MessageType.Offer, offer: parsedMessage.offer, to: parsedMessage.to, from: parsedMessage.from }))
                     console.log("offer")
                     break;
                 case MessageType.Answer:
                     senderSocket.send(JSON.stringify({ type: MessageType.Answer, answer: parsedMessage.answer }))
                     break;
                 case MessageType.IceCandidate:
-                    senderSocket.send(JSON.stringify({type: MessageType.IceCandidate, candidate: parsedMessage.candidate}))
+                    senderSocket.send(JSON.stringify({ type: MessageType.IceCandidate, candidate: parsedMessage.candidate }))
                     break;
                 case MessageType.DisConnectCall:
-                    senderSocket.send(JSON.stringify({type: MessageType.DisConnectCall}))
+                    senderSocket.send(JSON.stringify({ type: MessageType.DisConnectCall }));
+                    break;
+                case MessageType.ConfirmRequest:
+                    senderSocket.send(JSON.stringify({ type: MessageType.ConfirmRequest, id: parsedMessage.to, from: parsedMessage.from, name: parsedMessage.name, email: parsedMessage.email }))
+                    break;
+                case MessageType.ReceivedRequest:
+                    senderSocket.send(JSON.stringify({type: MessageType.ReceivedRequest, id: parsedMessage.from, name: parsedMessage.name, email: parsedMessage.email}))
+                    break;
+                default:
+                    break;
             }
         }
 

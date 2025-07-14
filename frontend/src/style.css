@@ -176,7 +176,7 @@ button:hover {
 }
 
 .frequest input {
-    width: 100%;
+    width: 80%;
     height: 3vh;
 }
 
@@ -999,7 +999,7 @@ canvas {
     gap: 10px
 }
 
-.call-from button{
+.call-from button {
     background-color: rgba(0, 0, 0, 0.26);
 }
 
@@ -1007,26 +1007,121 @@ canvas {
     transform: none;
 }
 
-.emojies{
+.emojies {
     position: absolute;
     z-index: 1;
     bottom: 40px;
     height: 200px;
-    width:20%;
+    width: 20%;
     background-color: rgba(255, 255, 255, 0.096);
     display: none;
     flex-wrap: wrap;
     padding: 10px;
-    border-radius:5px;
+    border-radius: 5px;
 
 
 }
 
-.emoji-wrapper:hover .emojies{
+.emoji-wrapper:hover .emojies {
     display: flex;
 }
 
-.emojies button{
+.emojies button {
     width: 30px;
     height: 10px;
+}
+
+.request-block {
+    display: flex;
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.request-block .close{
+    display: flex;
+    justify-content: end;
+}
+
+.request-block .close button
+{
+    background-color: rgba(0, 0, 0, 0.123);
+    border-radius: 50%;
+}
+
+.request-block .close button:hover{
+    transform: none;
+}
+
+.request-block .container {
+    width: 40%;
+    height: 75%;
+    border-radius: 5px;
+    /* From https://css.glass */
+    background: rgba(255, 255, 255, 0.21);
+    /* border-radius: 16px; */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.request-search-ls {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 90%;
+
+
+}
+
+.request-block input {
+    width: 90%;
+    border-radius: 5px;
+
+}
+
+.request-block .inside-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.request-search-ls img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: 10px;
+
+}
+
+.request-search-ls .list {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px auto;
+    gap: 10px;
+    font-weight: 600;
+    color: white;
+    
+}
+
+.request-search-ls button{
+    margin-right: 20px;
+}
+
+.request-search-ls button:hover{
+    transform: none;
+}
+
+.request-search-ls .flist{
+    display: flex;
+    align-items: center;
+    gap:10px;
 }

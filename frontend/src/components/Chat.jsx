@@ -30,7 +30,8 @@ import MyWebsocket from "../websocket";
 import CallIcon from '@mui/icons-material/Call';
 import CallEndIcon from '@mui/icons-material/CallEnd';
 import { emojis } from "../emojis.js";
-
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import CloseIcon from '@mui/icons-material/Close';
 
 
 
@@ -52,6 +53,9 @@ const MessageType = {
     Answer: 15,
     IceCandidate: 16,
     DisConnectCall: 17,
+    ConfirmRequest: 18,
+    ReceivedRequest: 19
+
 };
 
 let images = [];
@@ -77,6 +81,11 @@ function Chat() {
     const [callStatus, setCallStatus] = useState(0);
     const [caller, setCaller] = useState(null);
     const [callingMessage, setCallingMessage] = useState(null);
+    const [allUsers, setAllUsers] = useState(null);
+    const [showAllUsers, setShowAllUsers] = useState(0);
+    const [showConfirmRequest, setShowConfirmRequest] = useState(0);
+    const [confirmRequest, setConfirmRequest] = useState(0);
+
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
 
@@ -567,7 +576,22 @@ function Chat() {
                     setCallStatus(0);
                     console.log("Disconnected");
                     break;
+                case MessageType.ConfirmRequest:
+                    // console.log(response.id, response.name, response.email)
 
+                    setFriends(prev => { return [...prev, { id: response.from, name: response.name, status: "online" }] })
+
+                    await axioInst.delete("deleteConfirmRequest", { params: { userId: user.id, requestId: response.from } }).then((response) => {
+                        console.log(response.data);
+                    }).catch((err) => {
+                        console.log(err.message);
+                    })
+
+                    break;
+                case MessageType.ReceivedRequest:
+                    console.log(response.id, response.name, response.email)
+                    setConfirmRequest(prev=>{return[ ...prev, {id: response.id, name: response.name, email: response.email}]})
+                    break;
                 default:
                     break;
             }
@@ -592,6 +616,8 @@ function Chat() {
 
         // onMessageHandler(myWebsocket, friends);
     }, [friends, onMessageHandler, user.id]);
+
+    
 
     const updateSelectedUser = useCallback(
         (info) => {
@@ -640,6 +666,77 @@ function Chat() {
         [selectedUser],
     );
 
+    const getAllUsers = useCallback(async (value) => {
+        console.log(value)
+
+        let list = [];
+        let getFrequest = [];
+
+        await axioInst.get(`getAllUsers?value=${value}`).then((response) => {
+
+            const newlist = response.data.filter((user) => !friends.some((f) => f.id === user.id))
+            list = newlist;
+            // setAllUsers(newlist)
+
+        }).catch((err) => {
+            console.log(err)
+        })
+
+        await axioInst.get(`getRequest?userId=${user.id}`).then((response) => {
+
+            getFrequest = response.data
+
+        }).catch((err) => {
+            console.log(err.message)
+        });
+
+        console.log(getFrequest, list)
+
+        const newList = list.filter((user) => !getFrequest.some((f) => f.request_id === user.id))
+
+        setAllUsers(newList)
+
+    }, [friends, user.id])
+
+    const sendRequest = useCallback(async (requestId) => {
+        console.log("Line 659 :", user.id, requestId)
+
+        setAllUsers(prev => { return prev.filter((u1) => u1.id !== requestId) })
+
+        myWebsocket.current.send(JSON.stringify({ type: MessageType.ReceivedRequest, to: requestId, from: user.id, name: user.name, email: user.email }))
+
+        await axioInst.post("sendRequest", { userId: user.id, requestId }).then((response) => { console.log(response.data) }).catch((err) => {
+            console.log(err.message)
+        });
+
+    }, [user.email, user.id, user.name])
+
+    const getConfirmRequests = useCallback(async () => {
+        await axioInst.get(`/getAllConfirmRequest?userid=${user.id}`).then((response) => {
+            setConfirmRequest(response.data);
+            console.log("line 691", response.data)
+        }).catch((err) => {
+            console.log(err.message)
+        })
+    }, [user.id])
+
+    const addFriend = useCallback(async (friend_id, name, email) => {
+        setConfirmRequest(prev => { return prev.filter((old) => old.id !== friend_id) });
+        myWebsocket.current.send(JSON.stringify({ type: MessageType.ConfirmRequest, to: friend_id, from: user.id, name: user.name, email: user.email }))
+        setFriends(prev => { return [...prev, { id: friend_id, name, status: "online" }] })
+
+        await axioInst.post(`/addfriend`, { user_id: user.id, friend_id }).then((response) => {
+            setConfirmRequest(prev => prev.filter((old) => old.id !== friend_id))
+        }).catch((err) => {
+            console.log(err.message)
+        })
+    }, [setFriends, user.email, user.id, user.name])
+
+    useEffect(()=>{
+    getConfirmRequests()
+            
+    },[getConfirmRequests])
+
     const setPeerConnection = useCallback((pc) => {
         peerConnectionRef.current = pc;
     }, []);
@@ -670,6 +767,34 @@ function Chat() {
 
     return (
         <div className="chat">
+            {showAllUsers === 1 && <div className="request-block">
+                <div className="container">
+                    <div className="close"><button onClick={() => { setShowAllUsers(0); setAllUsers(null); }}><CloseIcon /></button></div>
+                    <div className="inside-container">
+                        <input type="text" name="" id="" placeholder="Search" onChange={(event) => { getAllUsers(event.target.value) }} />
+                        {getAllUsers &&
+                            <div className="request-search-ls">
+                                {allUsers?.map(user => {
+                                    return <div className="list"><div className="flist"><img src="profile.webp" alt="" />{user.name}</div>
+                                        <button onClick={() => { sendRequest(user.id) }}>Send Request</button></div>
+                                })}
+                            </div>}
+                    </div>
+                </div>
+            </div>}
+            {showConfirmRequest === 1 && <div className="request-block">
+                <div className="container">
+                    <div className="close"><button onClick={() => { setShowConfirmRequest(0);  }}><CloseIcon /></button></div>
+                    <div className="inside-container">
+                        {confirmRequest &&
+                            <div className="request-search-ls">
+                                {confirmRequest?.map(user => {
+                                    return <div className="list"><div className="flist"><img src="profile.webp" alt="" />{user.name}</div> <button onClick={() => { addFriend(user.id, user.name, user.email); }}>Confirm Request</button></div>
+                                })}
+                            </div>}
+                    </div>
+                </div>
+            </div>}
             {callStatus === 2 && <div className="call-from">
                 <p>{callingMessage}</p>
                 <button onClick={() => { updateSelectedUser(caller); setCall(1) }}>
@@ -742,9 +867,11 @@ function Chat() {
                 <div className="frequest">
                     <form action="">
                         <input type="text" />
-                        <button>
+                        <button onClick={(event) => { event.preventDefault(); setShowAllUsers(1); }}>
                             <PersonAddIcon />
                         </button>
+                        <button onClick={(event) => { event.preventDefault(); setShowConfirmRequest(1); getConfirmRequests() }}><NotificationsIcon /></button>
+
                     </form>
                 </div>
             </div>
@@ -863,8 +990,8 @@ function Chat() {
                             <div className="sendmessage">
                                 <div className="emj-file">
                                     <div className="emoji-wrapper">
-                                        <div className="emojies">{emojis.map((emoji,i)=>{
-                                            return <button key={i} onClick={()=>{setMessage(m=>m+emoji)}}>{emoji}</button>
+                                        <div className="emojies">{emojis.map((emoji, i) => {
+                                            return <button key={i} onClick={() => { setMessage(m => m + emoji) }}>{emoji}</button>
                                         })}</div>
                                         <button className="emoji-icon">
                                             <EmojiEmotionsIcon />

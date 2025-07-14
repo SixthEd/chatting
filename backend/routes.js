@@ -199,6 +199,51 @@ router.post("/chat", async (req, res) => {
     ]);
 });
 
+router.get("/getAllUsers",async(req, res)=>{
+    const value = req.query.value;
+    const response = await db.query(`Select id, name, email from users where name ILIKE $1`,[`${value}%`]);
+    console.log("line 204: ",response.rows)
+    res.status(200).json(response.rows);
+})
+
+router.post("/sendRequest", async(req, res)=>{
+    const {userId, requestId} =  req.body;
+    await db.query("Insert into frequest (user_id, request_id) Values ($1, $2)",[userId, requestId])
+    res.json(200);
+})
+
+router.get("/getRequest", async(req, res)=>{
+    const userId =req.query.userId;
+    console.log("Line 217",req.query)
+    const response = await db.query("Select request_id from frequest where user_id=$1",[userId])
+    res.status(200).json(response.rows)
+})
+
+router.get("/getAllConfirmRequest", async(req, res)=>{
+    const user_id=req.query.userid;
+    console.log(user_id)
+    const response = await db.query(`Select u1.id, u1.name, u1.email from frequest f JOIN users u1 ON f.user_id=u1.id where f.request_id=$1`,[user_id]);
+    // console.log(response.rows)
+    res.status(200).json(response.rows)
+})
+
+router.delete("/deleteConfirmRequest", async(req, res)=>{
+    const {userId, requestId} = req.query
+    console.log("Line 231:",userId, requestId )
+
+    await db.query(`Delete from frequest where user_id=$1 and request_id=$2`,[userId, requestId]);
+    res.status(200);
+})
+
+router.post("/addfriend",async(req, res)=>{
+    const {user_id, friend_id} =req.body;
+    console.log("line 232",user_id, friend_id)
+    await db.query("Insert into userfriends (user_id, friend_id) Values ($1, $2)",[user_id, friend_id])
+    await db.query("Insert into userfriends (user_id, friend_id) Values ($1, $2)",[friend_id,user_id ])
+
+    res.status(200).json({message: "added"})
+})
+
 function verifyRefreshToken(req, res, next) {
     var { refreshToken, accessToken } = req.cookies.jwt;
     jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
