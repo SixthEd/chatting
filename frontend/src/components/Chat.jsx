@@ -85,6 +85,8 @@ function Chat() {
     const [showAllUsers, setShowAllUsers] = useState(0);
     const [showConfirmRequest, setShowConfirmRequest] = useState(0);
     const [confirmRequest, setConfirmRequest] = useState(0);
+    const processedUsers = useRef(new Set());
+
 
     const url = "ws://localhost:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
@@ -590,7 +592,7 @@ function Chat() {
                     break;
                 case MessageType.ReceivedRequest:
                     console.log(response.id, response.name, response.email)
-                    setConfirmRequest(prev=>{return[ ...prev, {id: response.id, name: response.name, email: response.email}]})
+                    setConfirmRequest(prev => { return [...prev, { id: response.id, name: response.name, email: response.email }] })
                     break;
                 default:
                     break;
@@ -617,7 +619,7 @@ function Chat() {
         // onMessageHandler(myWebsocket, friends);
     }, [friends, onMessageHandler, user.id]);
 
-    
+
 
     const updateSelectedUser = useCallback(
         (info) => {
@@ -634,7 +636,7 @@ function Chat() {
             axioInst
                 .post("/chat", { user, info })
                 .then((res) => {
-                    console.log("line 637 :",res.data, info);
+                    console.log("line 637 :", res.data, info);
                     setShowMessage((old) => {
                         if (old[info.id]) {
                             return {
@@ -674,7 +676,7 @@ function Chat() {
 
         await axioInst.get(`getAllUsers?value=${value}`).then((response) => {
 
-            const newlist = response.data.filter((user) => !friends.some((f) => f.id === user.id))
+            const newlist = response.data.filter((searchUser) => !friends.some((f) => f.id === searchUser.id || user.id === searchUser.id))
             list = newlist;
             // setAllUsers(newlist)
 
@@ -732,10 +734,10 @@ function Chat() {
         })
     }, [setFriends, user.email, user.id, user.name])
 
-    useEffect(()=>{
-    getConfirmRequests()
-            
-    },[getConfirmRequests])
+    useEffect(() => {
+        getConfirmRequests()
+
+    }, [getConfirmRequests])
 
     const setPeerConnection = useCallback((pc) => {
         peerConnectionRef.current = pc;
@@ -765,6 +767,15 @@ function Chat() {
         console.log(block);
     }, [block]);
 
+    useEffect(() => {
+        friends.forEach(friend => {
+            if (!processedUsers.current.has(friend.id)) {
+                updateSelectedUser(friend);
+                processedUsers.current.add(friend.id);
+            }
+        });
+    }, [friends, updateSelectedUser]);
+
     return (
         <div className="chat">
             {showAllUsers === 1 && <div className="request-block">
@@ -774,7 +785,7 @@ function Chat() {
                         <input type="text" name="" id="" placeholder="Search" onChange={(event) => { getAllUsers(event.target.value) }} />
                         {getAllUsers &&
                             <div className="request-search-ls">
-                                {allUsers?.map((user,i) => {
+                                {allUsers?.map((user, i) => {
                                     return <div className="list" key={i}><div className="flist"><img src="profile.webp" alt="" />{user.name}</div>
                                         <button onClick={() => { sendRequest(user.id) }}>Send Request</button></div>
                                 })}
@@ -784,11 +795,11 @@ function Chat() {
             </div>}
             {showConfirmRequest === 1 && <div className="request-block">
                 <div className="container">
-                    <div className="close"><button onClick={() => { setShowConfirmRequest(0);  }}><CloseIcon /></button></div>
+                    <div className="close"><button onClick={() => { setShowConfirmRequest(0); }}><CloseIcon /></button></div>
                     <div className="inside-container">
                         {confirmRequest &&
                             <div className="request-search-ls">
-                                {confirmRequest?.map((user,i) => {
+                                {confirmRequest?.map((user, i) => {
                                     return <div className="list" key={i}><div className="flist"><img src="profile.webp" alt="" />{user.name}</div> <button onClick={() => { addFriend(user.id, user.name, user.email); }}>Confirm Request</button></div>
                                 })}
                             </div>}

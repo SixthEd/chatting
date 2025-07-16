@@ -399,7 +399,8 @@ button:hover {
 
 .message-date {
     height: fit-content;
-    margin: 0 10px
+    margin: 0 10px;
+    margin-top: 40px;
 }
 
 .time-text {
