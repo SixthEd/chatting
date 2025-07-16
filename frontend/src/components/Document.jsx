@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import PictureAsPdfRoundedIcon from '@mui/icons-material/PictureAsPdfRounded';
+// import PictureAsPdfRoundedIcon from '@mui/icons-material/PictureAsPdfRounded';
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
-import { withTheme } from "@emotion/react";
+// import { withTheme } from "@emotion/react";
 import CloseIcon from '@mui/icons-material/Close';
 import SendSharpIcon from '@mui/icons-material/SendSharp';
 function Document(props) {
@@ -31,7 +31,7 @@ function Document(props) {
 
     const closing = useCallback(() => {
         props.updateDocument();
-    })
+    },[props])
 
     const sendDocumentCaption = useCallback(() => {
         if (documentURL) {
@@ -54,7 +54,7 @@ function Document(props) {
         }
 
 
-    })
+    },[caption, closing, document, documentURL, props])
 
     return <div className="file-form" >
         <button className="file-close" onClick={() => closing()} ><CloseIcon /></button>

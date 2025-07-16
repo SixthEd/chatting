@@ -87,7 +87,7 @@ export const Canvas = (props) => {
     }
 
     const mouseUp = (event) => {
-        const { x, y } = position(event);
+        // const { x, y } = position(event);
         setIsPress(false);
     }
 
@@ -103,7 +103,7 @@ export const Canvas = (props) => {
         }
         else if (isDrawing === 1 && isPress) {
             const canvas = canvasRef.current;
-            const { x, y } = position(event);
+            // const { x, y } = position(event);
             var ctx = canvas.getContext("2d");
             ctx.beginPath();
             props.sendCanvas({ type: roomMessageType.Drawing, isDrawing, color, lastPosition, currentPosition, password: classRoomPassword })
@@ -134,7 +134,7 @@ export const Canvas = (props) => {
 
     useEffect(() => {
         props.setExposeFunction(() => clearCanvas())
-    }, [])
+    }, [props])
 
 
     return <div className="container">

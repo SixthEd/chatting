@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import AudioFileRoundedIcon from '@mui/icons-material/AudioFileRounded';
-import { withTheme } from "@emotion/react";
+// import { withTheme } from "@emotion/react";
 import CloseIcon from '@mui/icons-material/Close';
 import SendSharpIcon from '@mui/icons-material/SendSharp';
 function Audio(props) {
@@ -30,7 +30,7 @@ function Audio(props) {
 
     const closing = useCallback(() => {
         props.updateAudio();
-    })
+    },[props])
 
     const sendAudioCaption = useCallback(() => {
         if (audioURL) {
@@ -52,7 +52,7 @@ function Audio(props) {
         }
 
 
-    })
+    },[audio, audioURL, caption, closing, props])
 
     return <div className="file-form" >
         <button className="file-close" onClick={() => closing()} ><CloseIcon /></button>

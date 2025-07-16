@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import VideoFileIcon from '@mui/icons-material/VideoFile';
-import { withTheme } from "@emotion/react";
+// import { withTheme } from "@emotion/react";
 import CloseIcon from '@mui/icons-material/Close';
 import SendSharpIcon from '@mui/icons-material/SendSharp';
 function Video(props) {
@@ -30,7 +30,7 @@ function Video(props) {
 
     const closing = useCallback(() => {
         props.updateVideo();
-    })
+    },[props])
 
     const sendVideoCaption = useCallback(() => {
         if (videoURL) {
@@ -52,13 +52,13 @@ function Video(props) {
         }
 
 
-    })
+    },[caption, closing, props, video, videoURL])
 
     return <div className="file-form" >
         <button className="file-close" onClick={() => closing()} ><CloseIcon /></button>
         <form action="">
             <div onClick={handleRef}>
-                {videoURL ? <video src={videoURL} controls width="400" height="400" autoplay loop muted preload="auto"></video> : <VideoFileIcon sx={{ fontSize: 400, color: "white" }} />}
+                {videoURL ? <video src={videoURL} controls width="400" height="400" autoPlay loop muted preload="auto"></video> : <VideoFileIcon sx={{ fontSize: 400, color: "white" }} />}
                 <input type="file" accept="video/*" onChange={updateVideoName} style={{ display: "none" }} ref={inputRef} />
             </div>
             <div className="file-caption">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import { withTheme } from "@emotion/react";
+// import { withTheme } from "@emotion/react";
 import CloseIcon from '@mui/icons-material/Close';
 import SendSharpIcon from '@mui/icons-material/SendSharp';
 
@@ -32,7 +32,7 @@ function File(props) {
 
     const closing = useCallback(() => {
         props.updateFile();
-    })
+    },[props])
 
     const sendImageCaption = useCallback(() => {
         if (imageURL) {
@@ -54,7 +54,7 @@ function File(props) {
 
         }
 
-    })
+    },[caption, closing, image, imageURL, props])
 
     return <div className="file-form" >
         <button className="file-close" onClick={() => closing()} ><CloseIcon /></button>
