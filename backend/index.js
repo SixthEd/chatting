@@ -9,6 +9,12 @@ import http from "http";
 import { parse } from "url";
 import { generate } from "random-words";
 import { type } from "os";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 const userSockets = {};
 
@@ -109,6 +115,10 @@ app.use(cookieParser());
 //middleware for routes
 app.use("/", router);
 
+
+app.use(express.static(path.join(__dirname,'../frontend/build')))
+
+
 //websocket
 const server = http.createServer(app);
 
@@ -126,7 +136,7 @@ const webroom = new WebSocketServer({
 web.on("connection", (socket, request) => {
     socket.send(JSON.stringify({ working: "working chat" }))
     const parsedUrl = parse(request.url, true)
-    console.log(parsedUrl.query.id)
+    console.log("line 139", parsedUrl.query.id)
     const id = parsedUrl.query.id;
 
 
@@ -302,7 +312,6 @@ webroom.on("connection", async (socket, request) => {
     const response = await db.query(`Select * from users where id =$1`, [id]);
     const name = response.rows[0].name;
 
-
     socket.on("close", () => {
 
         if (classRoomPasswords.hasOwnProperty(parsedUrl.password)) {
@@ -356,6 +365,7 @@ webroom.on("connection", async (socket, request) => {
     });
 
     socket.on("message", (message) => {
+        console.log("Classroom Passwords",classRoomPasswords)
         const parsedMessage = JSON.parse(message.toString());
         // const senderSocket = roomUserSockets[parsedMessage.to];
         // const senderMessage = parsedMessage.message;
@@ -374,10 +384,13 @@ webroom.on("connection", async (socket, request) => {
                     socket.send(JSON.stringify({ type: roomMessageType.randomWord, word }))
                 }
                 else if (classRoomPasswords.hasOwnProperty(parsedMessage.password) && parsedMessage.role === "player") {
+                    console.log("error 387")
                     classRoomPasswords[parsedMessage.password] = { ...classRoomPasswords[parsedMessage.password], [id]: socket }
                 }
                 else {
-                    socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }))
+                    console.log("room not found")
+                    socket.send(JSON.stringify({ type: roomMessageType.roomNotFound, message: "room not found" }));
+                    return;
                 }
 
                 if (classRoomPasswords.hasOwnProperty(parsedMessage.password)) {
@@ -521,12 +534,16 @@ webroom.on("connection", async (socket, request) => {
                 }
 
                 break;
+                
+            default:
+                break;
         }
     })
 
 })
 
 server.on('upgrade', (request, sock, head) => {
+    console.log("Chal raha hain")
     const url = new URL(request.url, "ws://localhost:4000")
     if (url.pathname === "/ws") {
         web.handleUpgrade(request, sock, head, (socket) => {
@@ -541,6 +558,11 @@ server.on('upgrade', (request, sock, head) => {
     else {
         sock.destroy()
     }
+})
+
+app.get("*", (req, res)=>{
+    res.sendFile(path.join(__dirname,'../frontend/build/index.html'))
+
 })
 
 // create server 

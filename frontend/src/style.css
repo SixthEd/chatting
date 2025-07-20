@@ -1126,3 +1126,24 @@ canvas {
     align-items: center;
     gap:10px;
 }
+
+.room-not-found{
+    background-color: rgba(0, 0, 0, 0.233);
+    color:white;
+    border-radius: 5px;
+    padding: 0 20px;
+}
+
+button:hover{
+    cursor: pointer;
+}
+
+.calling-icon{
+    background-color: rgba(0, 0, 0, 0.226);
+    padding: 2px;
+    border-radius: 5px;
+}
+
+.calling-icon:hover{
+    cursor: pointer;
+}

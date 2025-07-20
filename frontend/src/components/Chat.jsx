@@ -211,10 +211,18 @@ function Chat() {
                 docName,
             });
 
-            const value = message;
+            let value;
             console.log(messageType);
             switch (messageType) {
                 case "imgCaption":
+                    value = {
+                        to: selectedUser.id,
+                        from: user.id,
+                        message,
+                        send_at,
+                        date,
+                        image
+                    }
                     myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
@@ -228,6 +236,14 @@ function Chat() {
                     );
                     break;
                 case "vCaption":
+                    value = {
+                        to: selectedUser.id,
+                        from: user.id,
+                        message,
+                        send_at,
+                        date,
+                        video
+                    }
                     myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
@@ -241,6 +257,14 @@ function Chat() {
                     );
                     break;
                 case "audioCaption":
+                    value = {
+                        to: selectedUser.id,
+                        from: user.id,
+                        message,
+                        send_at,
+                        date,
+                        audio
+                    }
                     myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
@@ -254,6 +278,15 @@ function Chat() {
                     );
                     break;
                 case "documentCaption":
+                    value = {
+                        to: selectedUser.id,
+                        from: user.id,
+                        message,
+                        send_at,
+                        date,
+                        doc,
+                        docName
+                    }
                     myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
@@ -268,6 +301,13 @@ function Chat() {
                     );
                     break;
                 default:
+                    value = {
+                        to: selectedUser.id,
+                        from: user.id,
+                        message,
+                        send_at,
+                        date
+                    }
                     myWebsocket.current.send(
                         JSON.stringify({
                             to: selectedUser.id,
@@ -365,11 +405,11 @@ function Chat() {
                         };
                     });
 
-                    axioInst.put("/updatechat", {
-                        user,
-                        friend: response.sender,
-                        message: value,
-                    });
+                    // axioInst.put("/updatechat", {
+                    //     user,
+                    //     friend: response.sender,
+                    //     message: value,
+                    // });
 
                     // receivedChatBox(response.senderMessage);
                     break;
@@ -406,11 +446,11 @@ function Chat() {
                             };
                         });
 
-                        axioInst.put("/updatechat", {
-                            user,
-                            friend: response.sender,
-                            message: value,
-                        });
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -446,11 +486,11 @@ function Chat() {
                             };
                         });
 
-                        axioInst.put("/updatechat", {
-                            user,
-                            friend: response.sender,
-                            message: value,
-                        });
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -486,11 +526,11 @@ function Chat() {
                             };
                         });
 
-                        axioInst.put("/updatechat", {
-                            user,
-                            friend: response.sender,
-                            message: value,
-                        });
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -527,11 +567,11 @@ function Chat() {
                             };
                         });
 
-                        axioInst.put("/updatechat", {
-                            user,
-                            friend: response.sender,
-                            message: value,
-                        });
+                        // axioInst.put("/updatechat", {
+                        //     user,
+                        //     friend: response.sender,
+                        //     message: value,
+                        // });
 
                         // receivedChatBox(response.senderMessage);
                     }
@@ -908,7 +948,7 @@ function Chat() {
                                     <div>
                                         {selectedUser && `${selectedUser.name}`}
                                     </div>
-                                    <div onClick={() => setCall(1)}>
+                                    <div className="calling-icon" onClick={() => setCall(1)}>
                                         <CallRoundedIcon />
                                     </div>
                                 </div>

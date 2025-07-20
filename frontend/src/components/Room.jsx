@@ -24,7 +24,7 @@ function Room(props) {
     };
 
     const ws = useRef(null);
-    const { classRoomPassword, setClassRoomPassword, role, setRole } = useContext(AuthContext);
+    const { classRoomPassword, setClassRoomPassword, role, setRole, setClassRoomMessage } = useContext(AuthContext);
     // const user =localStorage.getItem("user")
     const [pixeData, setPixelData] = useState({});
     // const [currentPosition, setCurrentPosition] = useState({x:0, y:0});
@@ -49,7 +49,7 @@ function Room(props) {
         if (ws.current) return
         const web = new WebSocket(`${url}?id=${user.id}&password=${classRoomPassword}`);
         ws.current = web
-
+        setClassRoomMessage(null);
         ws.current.onmessage = (message) => {
             const parsedMessage = (JSON.parse(message.data))
             // console.log(JSON.parse(message.data))
@@ -69,7 +69,7 @@ function Room(props) {
                     break;
 
                 case roomMessageType.roomNotFound:
-
+                    setClassRoomMessage("room not found");
                     // const user = JSON.parse(localStorage.getItem("user"))
                     setClassRoomPassword(null)
                     ws.current.send(JSON.stringify({ type: roomMessageType.roomNotFound, message, id: user.id, fromName: user.name, password: classRoomPassword }));
@@ -262,7 +262,7 @@ function Room(props) {
     }
 
     const sendClearDrawing = () => {
-        ws.current.send(JSON.stringify({type: roomMessageType.ClearDrawing, password: classRoomPassword}));
+        ws.current.send(JSON.stringify({ type: roomMessageType.ClearDrawing, password: classRoomPassword }));
     }
 
 

@@ -171,7 +171,7 @@ router.put("/updatechat", async (req, res) => {
     const { user, friend, message } = req.body;
     console.log("line 172:",req.body);
     if (user.id && message.from) {
-        const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date,image,video,audio, doc, docname) VALUES($1, $2, $3, now(),now()::date,$4,$5,$6, $7, $8)`, [message.from, user.id, message.message, message.image, message.video, message.audio, message.doc, message.docName]);
+        const response = await db.query(`INSERT INTO userchat ("from","to",message,send_at,date,image,video,audio, doc, docname) VALUES($1, $2, $3, now(),now()::date,$4,$5,$6, $7, $8)`, [message.from, message.to, message.message, message.image, message.video, message.audio, message.doc, message.docName]);
     }
     res.json("");
 });
@@ -188,14 +188,14 @@ router.post("/chat", async (req, res) => {
     }
     //    INSERT INTO userchat ("from", "to", chat, send_at) VALUES(5, 1, ARRAY['hello'],now());
 
-    return res.json([
-        { from: user.id, to: info.id, message: "this is hardcooded" },
-        { from: info.id, to: user.id, message: "this is hardcooded send" },
-        { from: user.id, to: info.id, message: "hi" },
-        { from: info.id, to: user.id, message: "hello" },
-        { from: user.id, to: info.id, message: "this " },
-        { from: user.id, to: info.id, message: "this is " },
-    ]);
+    // return res.json([
+    //     { from: user.id, to: info.id, message: "this is hardcooded" },
+    //     { from: info.id, to: user.id, message: "this is hardcooded send" },
+    //     { from: user.id, to: info.id, message: "hi" },
+    //     { from: info.id, to: user.id, message: "hello" },
+    //     { from: user.id, to: info.id, message: "this " },
+    //     { from: user.id, to: info.id, message: "this is " },
+    // ]);
 });
 
 router.get("/getAllUsers", async (req, res) => {
