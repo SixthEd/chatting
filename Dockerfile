@@ -1,26 +1,19 @@
-# Use Node base image
-FROM node:lts
+FROM node:lts AS frontend
 
-# Set working directory
-WORKDIR /app
+WORKDIR /app/frontend
+COPY frontend/ ./
+RUN npm install
+RUN npm run build
 
-# Copy package files and install dependencies separately for better caching
-COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
+# --- Backend Stage ---
+FROM node:lts AS backend
 
-RUN cd backend && npm install && \
-    cd ../frontend && npm install
+WORKDIR /app/backend
+COPY backend/ ./
+RUN npm install
 
-# Copy all project files
-COPY . .
+# Copy built frontend from frontend stage
+RUN mkdir -p /app/frontend/build
+COPY --from=frontend /app/frontend/build /app/frontend/build
 
-# Install nodemon globally for backend
-RUN npm install -g nodemon
-
-# Expose backend (3000) and frontend (4000) ports
-EXPOSE 4000 3000
-
-# Start both frontend and backend concurrently
-RUN true
-
-CMD ["sh", "-c", "sleep 30 && cd backend && nodemon index.js & cd frontend/src && npm start index.js"]
+CMD ["/bin/bash", "-c", "node index.js"]

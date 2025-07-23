@@ -76,7 +76,7 @@ const port = 4000;
 
 const cors = (req, res, next) => {
     res.header("Access-Control-Allow-Headers", "Content-Type");
-    res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+    res.header("Access-Control-Allow-Origin", "http://ec2-13-127-116-35.ap-south-1.compute.amazonaws.com:4000");
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
     res.header("Access-Control-Allow-Credentials", "true")
     //
@@ -90,9 +90,9 @@ env.config();
 // database config
 const db = new pg.Client({
     user: "postgres",
-    host: "localhost",
-    database: "chattwo",
-    password: "1234",
+    host: "db",
+    database: "postgres",
+    password: "postgres",
     port: 5432
 
 })
@@ -461,7 +461,7 @@ webroom.on("connection", async (socket, request) => {
                     }
                 })
 
-                let time = 360;
+                let time = 30;
                 intervals[parsedMessage.password] = setInterval(() => {
 
                     if (time === 0) {
