@@ -88,7 +88,7 @@ function Chat() {
     const processedUsers = useRef(new Set());
 
 
-    const url = "ws://localhost:4000/ws";
+    const url = "ws://ec2-13-127-116-35.ap-south-1.compute.amazonaws.com:4000/ws";
     // const ws = new WebSocket("ws://localhost:4000/ws");
 
     const myWebsocket = useRef("");

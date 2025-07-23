@@ -32,7 +32,7 @@ function Room(props) {
 
     const [message, setMessage] = useState("");
     const [messageList, setMessageList] = useState([]);
-    const url = `ws://localhost:4000/wsroom`;
+    const url = `ws://ec2-13-127-116-35.ap-south-1.compute.amazonaws.com:4000/wsroom`;
     const [clock, setClock] = useState(30);
     // const myInterval = useRef(null);
     const [randomWord, setRandomWord] = useState(null);
