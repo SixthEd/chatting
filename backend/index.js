@@ -313,9 +313,10 @@ webroom.on("connection", async (socket, request) => {
     const name = response.rows[0].name;
 
     socket.on("close", () => {
+            console.log("sending userdisconnected", parsedUrl.query.password)
 
-        if (classRoomPasswords.hasOwnProperty(parsedUrl.password)) {
-            Object.entries(classRoomPasswords[parsedUrl.password]).forEach(([id, client]) => {
+        if (classRoomPasswords.hasOwnProperty(parsedUrl.query.password)) {
+            Object.entries(classRoomPasswords[parsedUrl.query.password]).forEach(([id, client]) => {
                 if (client !== socket && client.readyState === socket.OPEN) {
                     client.send(
                         JSON.stringify({
@@ -326,7 +327,7 @@ webroom.on("connection", async (socket, request) => {
                     );
                 }
             });
-            delete classRoomPasswords[parsedUrl.password][id]
+            delete classRoomPasswords[parsedUrl.query.password][id]
 
         }
         else {
@@ -334,24 +335,24 @@ webroom.on("connection", async (socket, request) => {
         }
 
 
-        if (Object.keys(classRoomPasswords[parsedUrl.password]).length === 0) {
-            delete classRoomPasswords[parsedUrl.password]
-            delete creators[parsedUrl.password]
-            delete randomWords[parsedUrl.password];
-            clearInterval(intervals[parsedUrl.password]);
+        if (Object.keys(classRoomPasswords[parsedUrl.query.password]).length === 0) {
+            delete classRoomPasswords[parsedUrl.query.password]
+            delete creators[parsedUrl.query.password]
+            delete randomWords[parsedUrl.query.password];
+            clearInterval(intervals[parsedUrl.query.password]);
             console.log("classLength", classRoomPasswords)
         }
-        else if (creators[parsedUrl.password] == id) {
-            clearInterval(intervals[parsedUrl.password])
+        else if (creators[parsedUrl.query.password] == id) {
+            clearInterval(intervals[parsedUrl.query.password])
 
-            const passwordArray = Object.keys(classRoomPasswords[parsedUrl.password])
+            const passwordArray = Object.keys(classRoomPasswords[parsedUrl.query.password])
             const randomNumber = Math.floor(Math.random() * passwordArray.length);
             const creator = passwordArray[randomNumber];
-            creators[parsedUrl.password] = creator
+            creators[parsedUrl.query.password] = creator
             console.log(passwordArray, randomNumber, creator)
             const word = generate({ minLength: 3, maxLength: 8 });
-            randomWords[req.query.password] = word;
-            Object.entries(classRoomPasswords[parsedUrl.password]).forEach(([id, client]) => {
+            randomWords[parsedUrl.query.password] = word;
+            Object.entries(classRoomPasswords[parsedUrl.query.password]).forEach(([id, client]) => {
                 if (id === creator) {
                     client.send(JSON.stringify({ type: roomMessageType.chooseCreator, word }))
                 }
@@ -448,7 +449,7 @@ webroom.on("connection", async (socket, request) => {
             case roomMessageType.UserDisconnected:
 
                 delete classRoomPasswords[parsedMessage.password].id
-                console.log(classRoomPasswords[parsedMessage.password])
+                // console.log(classRoomPasswords[parsedMessage.password])
 
                 break;
 
