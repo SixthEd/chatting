@@ -86,6 +86,7 @@ function Chat() {
     const [showConfirmRequest, setShowConfirmRequest] = useState(0);
     const [confirmRequest, setConfirmRequest] = useState(0);
     const processedUsers = useRef(new Set());
+    const [numberOfRequest, setNumberOfRequest] = useState(0);
 
 
     const url = "ws://ec2-13-127-116-35.ap-south-1.compute.amazonaws.com:80/ws";
@@ -623,17 +624,18 @@ function Chat() {
 
                     setFriends(prev => { return [...prev, { id: response.from, name: response.name, status: "online" }] })
 
-                    await axioInst.delete("deleteConfirmRequest", { params: { userId: user.id, requestId: response.from } }).then((response) => {
-                        console.log(response.data);
-                    }).catch((err) => {
-                        console.log(err.message);
-                    })
+                  //  await axioInst.delete("deleteConfirmRequest", { params: { userId: user.id, requestId: response.from } }).then((response) => {
+                   //     console.log(response.data);
+                   //  }).catch((err) => {
+                   //     console.log(err.message);
+                   //  })
 
                     break;
                 case MessageType.ReceivedRequest:
                     console.log(response.id, response.name, response.email)
                     setConfirmRequest(prev => { return [...prev, { id: response.id, name: response.name, email: response.email }] })
-                    break;
+        	    setNumberOfRequest(confirmRequest.length + 1);
+		    break;
                 default:
                     break;
             }
@@ -763,7 +765,9 @@ function Chat() {
     }, [user.id])
 
     const addFriend = useCallback(async (friend_id, name, email) => {
-        setConfirmRequest(prev => { return prev.filter((old) => old.id !== friend_id) });
+       
+	setNumberOfRequest(confirmRequest.length-1);
+	setConfirmRequest(prev => { return prev.filter((old) => old.id !== friend_id) });
         myWebsocket.current.send(JSON.stringify({ type: MessageType.ConfirmRequest, to: friend_id, from: user.id, name: user.name, email: user.email }))
         setFriends(prev => { return [...prev, { id: friend_id, name, status: "online" }] })
 
@@ -772,7 +776,15 @@ function Chat() {
         }).catch((err) => {
             console.log(err.message)
         })
-    }, [setFriends, user.email, user.id, user.name])
+
+        await axioInst.delete("deleteConfirmRequest", { params: { userId: friend_id, requestId: user.id } }).then((response) => {
+              console.log(response.data);
+        }).catch((err) => {
+              console.log(err.message);
+        })
+    
+
+    }, [setFriends, user.email, user.id, user.name, confirmRequest])
 
     useEffect(() => {
         getConfirmRequests()
@@ -921,7 +933,7 @@ function Chat() {
                         <button onClick={(event) => { event.preventDefault(); setShowAllUsers(1); }}>
                             <PersonAddIcon />
                         </button>
-                        <button onClick={(event) => { event.preventDefault(); setShowConfirmRequest(1); getConfirmRequests() }}><NotificationsIcon /></button>
+                        <button onClick={(event) => { event.preventDefault(); setShowConfirmRequest(1); getConfirmRequests() }}><NotificationsIcon sx={{color:numberOfRequest===0?"white":"red"}} /></button>
 
                     </form>
                 </div>

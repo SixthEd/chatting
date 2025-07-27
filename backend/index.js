@@ -76,7 +76,7 @@ const port = 4000;
 
 const cors = (req, res, next) => {
     res.header("Access-Control-Allow-Headers", "Content-Type");
-    res.header("Access-Control-Allow-Origin", "http://ec2-13-127-116-35.ap-south-1.compute.amazonaws.com:4000");
+    res.header("Access-Control-Allow-Origin", "http://ec2-13-127-116-35.ap-south-1.compute.amazonaws.com:80");
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
     res.header("Access-Control-Allow-Credentials", "true")
     //
@@ -360,7 +360,7 @@ webroom.on("connection", async (socket, request) => {
                     client.send(JSON.stringify({ type: roomMessageType.choosePlayer }))
                 }
             })
-            console.log(creators[parsedUrl.password])
+            console.log(creators[parsedUrl.query.password])
         }
 
     });
