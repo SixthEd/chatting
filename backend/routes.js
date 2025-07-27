@@ -38,7 +38,7 @@ router.post("/register", async (req, res) => {
         }
 
         // is email valid
-        if (!validator.isEmail) {
+        if (!validator.isEmail(email)) {
             return res
                 .status(400)
                 .json({ message: "Please Enter valid email" });
