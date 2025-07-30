@@ -58,7 +58,7 @@ function Video(props) {
         <button className="file-close" onClick={() => closing()} ><CloseIcon /></button>
         <form action="">
             <div onClick={handleRef}>
-                {videoURL ? <video src={videoURL} controls width="400" height="400" autoPlay loop muted preload="auto"></video> : <VideoFileIcon sx={{ fontSize: 400, color: "white" }} />}
+                {videoURL ? <video src={videoURL} controls autoPlay loop muted preload="auto"></video> : <VideoFileIcon sx={{ fontSize: 400, color: "white" }} />}
                 <input type="file" accept="video/*" onChange={updateVideoName} style={{ display: "none" }} ref={inputRef} />
             </div>
             <div className="file-caption">

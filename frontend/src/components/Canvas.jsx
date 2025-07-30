@@ -137,7 +137,7 @@ export const Canvas = (props) => {
     }, [props])
 
 
-    return <div className="container">
+    return <div className="canvas-board-container">
         <div className="canvas-board">
             <div className="colors-board">
                 <div className="pencil-board">
@@ -146,11 +146,13 @@ export const Canvas = (props) => {
                     <button onClick={() => { clearCanvas(); props.sendClearDraw() }}><SquareIcon />New</button>
                     {/* <button onClick={(e)=>{ clearBoard()}}></button> */}
                 </div>
-                {paintingColors.map((c,i) => <button style={{ backgroundColor: c }} key={i} onClick={() => { setColor(c); setIsDrawing(1) }}></button>)}
+                <div className="painting-colors">
+                    {paintingColors.map((c, i) => <button style={{ backgroundColor: c }} key={i} onClick={() => { setColor(c); setIsDrawing(1) }}></button>)}
+                </div>
             </div>
 
             <div id="canvas-container">
-                <canvas width="1200" height="755" ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
+                <canvas ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
 
             </div>
 

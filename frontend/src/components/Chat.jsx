@@ -640,7 +640,7 @@ function Chat() {
                     break;
             }
         },
-        [friends, setFriends, user],
+        [confirmRequest.length, friends, setFriends],
     );
 
     useEffect(() => {

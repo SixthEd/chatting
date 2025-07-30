@@ -269,7 +269,7 @@ function Room(props) {
     return <div className="classRoom">
         <div className="room-container">
             <div className="room-board-container">
-                <div>
+                <div className="room-board-subContainer">
                     <div className="password-clock">
                         <p>Room Password : {classRoomPassword}</p>{randomWord && <div className="randomWord">{randomWord.toUpperCase().split("").map((w, i) => <p key={i}>{w}</p>)}</div>}<p> Clock : {clock}</p>
                     </div>
@@ -277,7 +277,7 @@ function Room(props) {
                         {role === "player" ? <p>Wait game starts when host is ready ...</p> : <button onClick={() => { gameStart() }}>Start</button>}
                     </div>}
                     {winner === 1 && <div className="start-game"><p>{winnerMessage}  <br></br>Choosing new host...</p></div>}
-                    <div className={role === "player" ? "board-block" : ""}>
+                    <div className={role === "player" ? "board-block" : "sub-board-block"}>
                         <Canvas sendCanvas={sendCanvasPositions} pixel={pixeData} sendClearDraw={sendClearDrawing} setExposeFunction={(fn) => (clearFuncRef.current = fn)} />
                     </div>
                 </div>
