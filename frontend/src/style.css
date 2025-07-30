@@ -776,7 +776,8 @@ canvas {
     padding: 0;
     border: 1px solid rgba(66, 64, 64, 0.37);
     width: 100%;
-    height: 100%;
+    max-width: 1200px; 
+    aspect-ratio: 1200 / 760;
 }
 
 #canvas-container {
@@ -792,7 +793,7 @@ canvas {
     height: 100%;
 }
 
-.sub-board-block{
+.sub-board-block, .board-block{
     width: 100%;
     height: 100%;
 }
@@ -814,7 +815,7 @@ canvas {
 .colors-board {
     background-color: rgb(49 42 42 / 53%);
     padding: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 20px;
     display: flex;
     gap: 20px;
     justify-content: center;

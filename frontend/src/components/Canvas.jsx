@@ -49,8 +49,10 @@ export const Canvas = (props) => {
     const position = (event) => {
         const canvas = canvasRef.current;
         const rect = canvas.getBoundingClientRect()
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (event.clientX - rect.left) * scaleX;
+        const y = (event.clientY - rect.top) * scaleY;
         return { x, y }
     }
 
@@ -152,7 +154,7 @@ export const Canvas = (props) => {
             </div>
 
             <div id="canvas-container">
-                <canvas ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
+                <canvas width={1200} height={760} ref={canvasRef} onMouseDown={(e) => mousePress(e)} onMouseMove={(e) => moving(e)} onMouseUp={(e) => mouseUp(e)} onMouseLeave={(e) => { mouseOut(e) }}></canvas>
 
             </div>
 
