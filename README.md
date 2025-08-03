@@ -1,2 +1,2 @@
-![Chatting1 (2)](https://github.com/user-attachments/assets/f5de0604-2a9d-46db-af15-11c86816672e)
-![Chatting1 (1)](https://github.com/user-attachments/assets/69de5da7-10e6-45e9-816d-4ba2eedb8951)
+![chat1](https://github.com/user-attachments/assets/47004f21-b920-47f0-ab72-f717b9ff450f)
+![2025-08-03 13-22-34](https://github.com/user-attachments/assets/a9471123-4562-4cb9-a8f8-3ff7060b04e4)
