@@ -242,7 +242,7 @@ function Call(props) {
 
         <div className="calling-buttons">
             {props.receiveCall !== 1 && <button onClick={() => { call() }}><CallIcon sx={{ fontSize: 40, color: "green" }} /></button>}
-            {receiverToggle === 1 && <button onClick={() => { receiver(); }}><CallReceivedIcon sx={{ fontSize: 40, color: "mediumspringgreen" }} /></button>}
+            {receiverToggle === 1 && <button onClick={() => { receiver(); props.setCallStatus(0)}}><CallReceivedIcon sx={{ fontSize: 40, color: "mediumspringgreen" }} /></button>}
             <button onClick={() => { cancel() }}><CallEndIcon sx={{ fontSize: 40, color: "red" }} /></button>
             {props.receiveCall === 1 && <button onClick={() => { share() }}><ScreenShareIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
             {props.receiveCall === 1 && <button onClick={() => { setToggle((prev) => !prev) }}><CameraswitchIcon sx={{ fontSize: 40, color: "deepskyblue" }} /></button>}
